@@ -555,8 +555,7 @@ Shared risk/reward
 
 **Email:** leonardoschiavoni82@gmail.com
 **Phone:** +39 3331998914
-**GitHub:** [github.com/your-repo]
-**LinkedIn:** [linkedin.com/in/your-profile]
+**LinkedIn:** linkedin.com/in/leonardo-schiavoni-665173340
 
 **Let's start winning with data!** 🏎️
 
