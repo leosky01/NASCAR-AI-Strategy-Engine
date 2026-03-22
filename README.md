@@ -111,8 +111,6 @@ This project shows that I can approach these problems using analytical methods a
 - Traffic / dirty air effects  
 - Caution dynamics  
 
-![Tire Degradation](docs/images/tire_degradation.png)
-
 ---
 
 ### 2. Machine Learning (Caution Prediction)
@@ -214,6 +212,7 @@ python train_caution_model.py
 ## 📬 Contact
 
 Email: leonardoschiavoni82@gmail.com  
+Telephone: +39 333 199 8914
 LinkedIn: linkedin.com/in/leonardo-schiavoni-665173340  
 
 ---
