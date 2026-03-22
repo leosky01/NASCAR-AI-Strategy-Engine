@@ -454,22 +454,6 @@ Result: 13th place (↑ 2 positions)
 - What's your timeline?
 - What's your budget range?
 
----
-
-## Slide 18: Contact
-
-## Let's Connect
-
-**Email:** [your email]
-**Phone:** [your phone]
-**GitHub:** [github.com/your-repo]
-**LinkedIn:** [linkedin.com/in/your-profile]
-
-**Next Steps:**
-1. Try the demo dashboard
-2. Ask questions
-3. Discuss your needs
-4. Plan pilot program
 
 ---
 
