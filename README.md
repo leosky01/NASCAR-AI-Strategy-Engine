@@ -1,25 +1,42 @@
 <p align="center">
+  <img src="https://img.shields.io/badge/Portfolio-Project-blue" alt="Portfolio Project">
   <img src="https://img.shields.io/badge/Status-Production%20Ready-success" alt="Production Ready">
   <img src="https://img.shields.io/badge/Tests-83%2F83%20Passing-brightgreen" alt="Tests Passing">
-  <img src="https://img.shields.io/badge/Performance-10x%20Faster-blue" alt="Performance">
+  <img src="https://img.shields.io/badge/Performance-68x%20Faster-brightgreen" alt="Performance">
 </p>
 
 <p align="center">
   <h1 align="center">🏎️ NASCAR AI Strategy Engine</h1>
   <p align="center">
-    <strong>Transform gut feelings into data-driven decisions that win races</strong>
+    <strong>A portfolio project demonstrating data science, simulation, and optimization capabilities applied to NASCAR race strategy</strong>
   </p>
   <p align="center">
-    <em>A complete race strategy optimization framework designed to replicate the type of strategy tools used by professional NASCAR teams</em>
+    <em>This framework showcases the type of analytics tools used by professional NASCAR teams, built from scratch to demonstrate technical skills and racing domain knowledge</em>
   </p>
   <p align="center">
     <a href="#why-this-matters">Why It Matters</a> •
     <a href="#what-it-does">What It Does</a> •
-    <a href="#results">Technical Results</a> •
+    <a href="#results">Demonstrated Capabilities</a> •
     <a href="#demo">See It In Action</a> •
-    <a href="#contact">Let's Talk</a>
+    <a href="#contact">Let's Work Together</a>
   </p>
 </p>
+
+---
+
+## 👋 About This Project
+
+**This is a portfolio project designed to demonstrate my capability to build production-quality analytics tools for motorsports.**
+
+While this is a demonstration project (not affiliated with any NASCAR team), it showcases the type of work I could do for a race team:
+
+✅ **Build decision support systems** from requirements to deployment
+✅ **Apply machine learning** to real racing strategy problems
+✅ **Create simulations** that model complex, stochastic environments
+✅ **Deliver production code** with comprehensive testing and documentation
+✅ **Communicate results** through interactive dashboards and clear reports
+
+**The Goal:** To show NASCAR teams that I have the technical skills, racing knowledge, and problem-solving ability to contribute meaningfully to their analytics and strategy efforts.
 
 ---
 
@@ -27,7 +44,7 @@
 
 **Every race, strategic decisions impact outcomes.**
 
-The difference between 15th and 12th place often comes down to **one pit stop decision**. Small optimizations in strategy can lead to significant improvements in finishing positions. This engine helps quantify those decisions with statistical rigor.
+The difference between 15th and 12th place often comes down to **one pit stop decision**. In NASCAR's competitive landscape, small advantages compound over a season. This engine demonstrates how data-driven approaches can quantify these decisions and uncover opportunities that gut instinct alone might miss.
 
 **Current Reality:**
 - ✗ Strategy decisions based on "what we usually do"
@@ -66,38 +83,38 @@ The difference between 15th and 12th place often comes down to **one pit stop de
 
 ---
 
-## 🏆 Technical Results
+## 🏆 Demonstrated Capabilities
 
-### Performance Capabilities
+### What The Engine Shows
 
-Validated on simulated race scenarios reflecting real-world dynamics:
+Validated on simulated race scenarios reflecting real-world dynamics, this framework demonstrates the potential for data-driven strategy optimization:
 
-| Metric | Improvement | Technical Impact |
-|--------|-------------|------------------|
-| **Avg Finishing Position** | +1.5 to +3.0 positions vs baseline strategies | Quantified through Monte Carlo simulation |
-| **Top-10 Finishes** | +10-20% more frequent vs baseline strategies | Statistical significance validated (p < 0.05) |
-| **Decision Speed** | 10x faster than manual analysis | 200 race simulations in 3.6 seconds |
-| **Strategy Confidence** | Quantified risk with 95% confidence intervals | Statistical rigor in every recommendation |
+| Metric | Demonstrated Improvement | How It's Measured |
+|--------|------------------------|-------------------|
+| **Strategy Optimization** | +1.5 to +3.0 positions vs baseline strategies | Monte Carlo simulation across 200+ scenarios |
+| **Consistency** | +10-20% more top-10 finishes vs baseline | Statistical significance validated (p < 0.05) |
+| **Analysis Speed** | 200 simulations in 3.6 seconds | Parallel processing with joblib |
+| **Decision Quality** | 95% confidence intervals on recommendations | Statistical rigor in every evaluation |
 
-### Technical Example
+### What The Engine Can Do
 
 ```
 Scenario: Martinsville, Lap 85
-Decision: Caution just came out. Do we pit or stay out?
+Question: Caution just came out. Do we pit or stay out?
 
 Traditional Approach:
   Crew Chief: "I think we should stay out, track position is key"
-  Limitation: Cannot quantify the risk/reward tradeoff
+  Challenge: No way to quantify the risk/reward tradeoff
 
-With AI Engine:
+With This Engine:
   Analysis: 200 simulations of each option
   - Stay out: Avg finish 16.2 ± 3.1 positions
   - Pit now:  Avg finish 13.5 ± 2.4 positions
   - Pit in 2 laps: Avg finish 12.1 ± 2.1 positions ⭐
 
-  Recommendation: Pit in 2 laps (under caution)
+  Output: "Pit in 2 laps (under caution)"
   Confidence: 94% statistical significance
-  Advantage: Quantified decision with known risks
+  Value: Quantified decision with known risks and alternatives
 ```
 
 ![Sensitivity Analysis](docs/images/sensitivity_analysis.png)
@@ -192,49 +209,62 @@ Beautiful, intuitive interface for the entire team:
 
 ---
 
-## 💼 Technical Applications
+## 💼 What This Demonstrates
 
-### What This Engine Enables
+This project showcases the technical capabilities that could benefit a motorsport team:
 
-**For Learning & Research:**
-- Complete framework for studying race strategy optimization
-- Demonstrates machine learning applications in motorsports
-- Open-source codebase for educational purposes
-- Foundation for further research and development
+### For Race Strategy
 
-**For Technical Analysis:**
-- Quantify strategic tradeoffs with statistical confidence
-- Test hypotheses about pit stop timing
-- Compare strategies across thousands of simulated scenarios
-- Understand risk/reward through Monte Carlo methods
+**The Engine Can:**
+- Evaluate hundreds of strategic scenarios in seconds
+- Identify optimal pit windows with statistical confidence
+- Quantify the risk/reward of different strategic options
+- Provide data-backed recommendations for race-day decisions
 
-**For Engineering Demonstration:**
-- Production-quality code with comprehensive testing
-- Real-time performance optimization (68x faster than targets)
-- Scalable architecture for additional features
-- Clean separation of physics simulation, ML, and optimization
+**Real-World Application:**
+- Pre-race strategy planning and comparison
+- In-race decision support with "what if" analysis
+- Post-race evaluation and learning
+- Understanding why certain strategies work better than others
+
+### For Your Team
+
+**What This Shows I Can Do:**
+- Build production-quality analytics tools from scratch
+- Apply machine learning to domain-specific problems
+- Create real-time decision support systems
+- Combine physics simulation with statistical analysis
+- Deliver working software, not just notebooks
+
+**Technical Skills Demonstrated:**
+- **Machine Learning**: XGBoost with 18 engineered features (AUC: 0.80)
+- **Simulation**: Physics-based race modeling
+- **Optimization**: scipy and custom algorithms for strategy optimization
+- **Statistics**: Monte Carlo, hypothesis testing, effect sizes
+- **Engineering**: 100% test coverage, 68x faster than targets
+- **Full-Stack**: Interactive dashboard with Plotly/Streamlit
 
 ![ROI Analysis](docs/images/roi_analysis.png)
 *Performance comparison across different computational scenarios*
 
 ### Industry Context
 
-**Analytics in Motorsports:**
-- Formula 1: Extensive use of simulation and optimization (all teams)
+**The Analytics Trend in Motorsports:**
+- Formula 1: Every team uses advanced simulation and optimization
 - IndyCar: Growing adoption of data-driven strategy tools
-- NASCAR: Growing adoption of data-driven approaches
-- **This project demonstrates the type of tools used by professional teams**
+- NASCAR: Teams increasingly investing in analytics capabilities
+- **This project demonstrates skills in this growing field**
 
-**Technical Approach:**
+**What Leading Teams Are Doing:**
 - RFK Racing: Advanced simulation and machine learning
 - Team Penske: Dedicated data science team
 - Joe Gibbs Racing: Strategy optimization systems
 
-**This Engine:**
-- Designed to replicate professional strategy tools
-- Open-source for learning and development
-- Foundation for understanding race optimization
-- Demonstrates full-stack data science capabilities
+**What I Bring:**
+- The technical foundation to build similar tools
+- Understanding of both racing strategy and data science
+- Production-quality code that could be adapted to real team data
+- Passion for motorsports and analytical thinking
 
 ---
 
@@ -320,30 +350,35 @@ Built by engineers who understand both code and racing:
 
 ---
 
-## 🎯 Who This Is For
+## 🎯 Who This Could Help
 
-### Perfect For:
+### For NASCAR Teams
 
-✅ **Data Science Students** - Learn ML, simulation, and optimization in a real-world context
+**This Project Demonstrates Capability To:**
+- Build and deploy race strategy optimization tools
+- Apply data science to real racing problems
+- Create decision support systems for crew chiefs and strategists
+- Analyze data and provide actionable insights
+- Contribute immediately to technical capabilities
 
-✅ **Motorsports Engineers** - Understand strategy optimization techniques
+**Potential Applications:**
+- Pre-race strategy planning and simulation
+- In-race decision support and "what if" analysis
+- Post-race performance analysis
+- Driver and team performance evaluation
 
-✅ **Researchers** - Study race strategy algorithms and statistical methods
+### For Hiring Managers
 
-✅ **Software Engineers** - Explore production ML systems with comprehensive testing
+**What This Portfolio Piece Shows:**
+✅ **Domain Knowledge** - Deep understanding of NASCAR racing dynamics
+✅ **Technical Skills** - Full-stack data science (ML, simulation, optimization)
+✅ **Engineering Excellence** - Production-quality code, 100% tested
+✅ **Problem-Solving** - Complex, real-world optimization challenge
+✅ **Communication** - Clear documentation and visualizations
+✅ **Passion** - Combining love of racing with analytical skills
 
-✅ **Racing Enthusiasts** - Gain insights into how professional teams approach strategy
-
-✅ **Developers** - Study clean architecture and performance optimization
-
-### Technical Focus:
-
-This is a **technical demonstration and educational tool**, not a commercial product or betting system. It showcases:
-
-- Applied machine learning in a domain-specific context
-- Statistical analysis and Monte Carlo simulation
-- Optimization algorithms for strategic decision-making
-- Production-quality software engineering practices
+**Ready to Contribute:**
+This isn't just a learning exercise - it's a demonstration of the type of work I could do for your team from day one.
 
 ---
 
@@ -359,47 +394,81 @@ This is a **technical demonstration and educational tool**, not a commercial pro
 
 ---
 
-## 🤝 Technical Collaboration
+## 🤝 Let's Work Together
 
-### Open Source & Educational
+### I'm Looking For:
 
-This project is designed as a **learning resource and technical demonstration**:
+**Race Team Opportunities:**
+🏎️ **Race Engineer / Strategy Analyst**
+- Apply data science to real race strategy
+- Build tools for crew chiefs and drivers
+- Analyze performance and find competitive advantages
 
-**For Students & Learners:**
-- Complete example of applied machine learning
-- Production-quality code with comprehensive testing
-- Real-world optimization problem with clear metrics
-- Foundation for further research and development
+🏎️ **Data Scientist / Analytics Engineer**
+- Develop predictive models and optimization tools
+- Work with telemetry and race data
+- Create decision support systems
 
-**For Researchers:**
-- Validated simulation framework for strategy research
-- Statistical methods for decision-making under uncertainty
-- Extensible architecture for new features and experiments
+🏎️ **Internships & Contract Work**
+- Short-term projects to demonstrate value
+- Pilot programs to prove capabilities
+- Collaborative research and development
 
-**For Motorsports Professionals:**
-- Demonstration of analytics capabilities in racing
-- Open-source alternative to proprietary strategy tools
-- Reference implementation for building custom solutions
+### What I Bring:
 
-### Ways to Contribute:
+**Technical Capabilities:**
+- End-to-end data science (from raw data to deployment)
+- Production-quality software engineering
+- Domain expertise in motorsports strategy
+- Passion for racing and analytical thinking
 
-🔧 **Technical Contributions**
-- Enhance physics models with additional factors
-- Add new optimization algorithms
-- Improve visualization and dashboard features
-- Extend to other racing series
+**Ready to Start:**
+- No training needed - I understand racing strategy
+- Proven ability to deliver working systems
+- Eager to learn and adapt to team-specific needs
+- Committed to excellence and continuous improvement
 
-📊 **Validation & Testing**
-- Test on different track types and conditions
-- Validate against historical race data (if available)
-- Improve statistical methods and confidence intervals
-- Add new evaluation metrics
+### Contact:
 
-📚 **Documentation & Education**
-- Improve documentation and examples
-- Create tutorials and walkthroughs
-- Add case studies and examples
-- Translate to other languages
+**GitHub:** [your-github-username]
+**Email:** [your-email]
+**LinkedIn:** [your-linkedin]
+**Portfolio:** [your-portfolio-url]
+
+**Let's discuss how I can contribute to your team's success.** 🏎️
+
+---
+
+## 🎯 Why Consider Me For Your Team
+
+### The Unique Combination I Offer:
+
+**Racing Knowledge + Technical Skills**
+- Deep understanding of NASCAR strategy (pit stops, cautions, tire management)
+- Production-level data science and software engineering
+- Ability to bridge the gap between crew chiefs and data analysts
+
+**Proven Track Record**
+- Built a complete working system from scratch
+- 100% test coverage with production-quality code
+- Performance that exceeds targets by 68x
+- Clear documentation and communication
+
+**Ready to Contribute**
+- No steep learning curve on racing concepts
+- Can start building value from day one
+- Passionate about motorsports and analytics
+- Eager to learn team-specific systems and needs
+
+### What I'm Looking For:
+
+**Ideal Role:** Race Engineer, Strategy Analyst, or Data Scientist with a NASCAR team
+
+**Timeline:** Available immediately for full-time, contract, or internship positions
+
+**Location:** Open to relocation to NASCAR hubs (Charlotte, NC; Concord, NC; etc.)
+
+**Commitment:** Looking for a team where I can build a long-term career and contribute to winning races
 
 ---
 
@@ -455,14 +524,14 @@ print(comparison)
 
 ## 🏁 License
 
-This project is proprietary. All rights reserved.
+This project is open source and available for educational purposes.
 
 ---
 
 <p align="center">
   <em>"In racing, everyone has the same goal - to win. The question is: who makes the best decisions to get there?"</em>
   <br><br>
-  <strong>This engine helps you make those decisions better.</strong>
+  <strong>I want to help your team make those decisions better.</strong>
   <br><br>
-  Built for speed. Engineered for victory. 🏆
+  Let's build something championship-worthy together. 🏆
 </p>
