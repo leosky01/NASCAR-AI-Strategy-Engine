@@ -431,34 +431,21 @@ This could take different forms:
 - Genuine passion for the sport
 - Humility - I know I have a lot to learn
 
-**My Commitment:**
-- I'll work harder than anyone to prove my value
-- I'll respect the experience and knowledge of the team
-- I'll start wherever needed and earn my way up
-- I'll focus on being useful, not impressive
-
 ### Contact
 
 If you're open to giving someone a trial period, I'd love the chance to prove myself.
 
-**GitHub:** [your-github-username]
-**Email:** [your-email]
-**LinkedIn:** [your-linkedin]
+**Email:** leonardoschiavoni82@gmail.com
+**Telephone:** +39 333 199 8914
+**LinkedIn:** linkedin.com/in/leonardo-schiavoni-665173340
 
 **Thank you for considering this.** 🏎️
 
 ---
 
-## 📞 Contact
-
-**GitHub:** [your-github-username]
-**Email:** [your-email]
-**LinkedIn:** [your-linkedin]
-
 **Open to:**
 - Internships
 - Trial periods
-- Contract work
 - Entry-level positions
 
 **Location:** Willing to relocate for the right opportunity
