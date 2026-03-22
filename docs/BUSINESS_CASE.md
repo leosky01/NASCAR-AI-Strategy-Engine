@@ -553,8 +553,8 @@ Shared risk/reward
 
 ## Contact Information
 
-**Email:** [your email]
-**Phone:** [your phone]
+**Email:** leonardoschiavoni82@gmail.com
+**Phone:** +39 3331998914
 **GitHub:** [github.com/your-repo]
 **LinkedIn:** [linkedin.com/in/your-profile]
 
