@@ -8,8 +8,20 @@
 <p align="center">
   <h1 align="center">🏎️ NASCAR AI Strategy Engine</h1>
   <p align="center">
-    <strong>A portfolio project: data science and simulation tools for NASCAR race strategy analysis</strong>
+    <strong>Interactive AI-driven tools for NASCAR race strategy analysis</strong>
   </p>
+  ## 🚀 Interactive Dashboard
+
+This project includes a fully interactive Streamlit dashboard for:
+
+- Strategy comparison using Monte Carlo simulations  
+- Pit stop optimization  
+- Live race simulation  
+
+Run locally:
+
+```bash
+streamlit run app.py
   <p align="center">
     <em>Built to demonstrate technical skills in machine learning, simulation, and optimization applied to motorsports</em>
   </p>
@@ -26,7 +38,7 @@
 
 ## 👋 About This Project
 
-**This is a portfolio project demonstrating my skills in data science, simulation, and optimization.**
+**This is a portfolio project demonstrating practical skills in data science, simulation, and optimization applied to motorsport strategy..**
 
 I built this to show that I can:
 - Apply machine learning and statistical methods to racing strategy problems
@@ -251,8 +263,8 @@ This project demonstrates I can work with:
 - Humility and willingness to learn from the team
 - Work ethic and attention to detail
 
-![ROI Analysis](docs/images/roi_analysis.png)
-*Computational performance across different scenarios*
+![Performance Metrics](docs/images/performance_metrics.png)
+*Performance benchmarks across different components*
 
 ### Context
 
@@ -397,30 +409,19 @@ This could be relevant if your team is:
 
 ---
 
-## 🤝 What I'm Looking For
+**Open to:**
+- Internship
+- Trial period
+- Entry-level role
 
-### The Opportunity I Want
+**During a trial period, I would:**
+- Learn your systems and data quickly  
+- Contribute to analysis and tool development  
+- Demonstrate value through practical work  
 
-**A Trial Period With a NASCAR Team:**
-
-This could take different forms:
-- **Internship** - 3-6 months to prove I can add value
-- **Contract/Project** - Specific work with clear deliverables
-- **Trial Hire** - Chance to show what I can do in real environment
-- **Entry-Level Role** - Starting position where I can earn my way up
-
-**What I'd Do in That Trial Period:**
-1. Learn your team's systems, data, and processes
-2. Help with whatever analytical work is needed
-3. Build tools or analyses that provide actual value
-4. Work hard, learn constantly, and prove my worth
-5. Demonstrate that I can be a long-term asset to the team
-
-**What I'm Asking For:**
-- A chance to work with real team data and problems
-- Mentorship from experienced crew chiefs and engineers
-- The opportunity to prove myself in practice
-- Feedback on whether I'm providing real value
+**What I'm looking for:**
+- A chance to work on real problems  
+- Feedback on my contribution  
 
 ### Why I Think This Could Work
 
@@ -429,7 +430,6 @@ This could take different forms:
 - Understanding of NASCAR strategy and what matters
 - Work ethic and attention to detail
 - Genuine passion for the sport
-- Humility - I know I have a lot to learn
 
 ### Contact
 
@@ -441,18 +441,7 @@ If you're open to giving someone a trial period, I'd love the chance to prove my
 
 **Thank you for considering this.** 🏎️
 
----
-
-**Open to:**
-- Internships
-- Trial periods
-- Entry-level positions
-
 **Location:** Willing to relocate for the right opportunity
-
----
-
-## 📋 Quick Reference
 
 ---
 
