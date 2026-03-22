@@ -306,19 +306,3 @@ pytest tests/ -v
 > A: Runs on standard laptops. For race-day use, we recommend a dedicated machine with 8+ cores for faster Monte Carlo analysis.
 
 ---
-
-## 📞 Contact & Next Steps
-
-**For Pilot Program:**
-- Duration: 4-6 weeks
-- Deliverables: Calibrated model, strategy evaluation for 3 tracks, crew chief training
-- Investment: $50K-$150K
-
-**For More Information:**
-- Review `docs/BUSINESS_CASE.md` for ROI analysis
-- See `docs/IMPLEMENTATION_GUIDE.md` for technical details
-- Check `docs/SIMULATOR_DESIGN.md` for architecture overview
-
-**Demo prepared by:** [Your Name]
-**Date:** [Current Date]
-**Version:** 1.0
