@@ -39,7 +39,6 @@ streamlit run app.py
 ```
 
 ![Strategy Comparison](docs/images/strategy_comparison.png)
-![Live Simulation](docs/images/live_simulation.png)
 
 ---
 
