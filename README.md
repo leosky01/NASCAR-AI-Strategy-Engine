@@ -1,6 +1,9 @@
 <p align="center">
+  <a href="https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/">
+    <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Streamlit App" />
+  </a>
   <img src="https://img.shields.io/badge/Portfolio-Project-blue" />
-  <img src="https://img.shields.io/badge/Status-Work%20In%20Progress-yellow" />
+  <img src="https://img.shields.io/badge/Status-Live%20Demo-success" />
   <img src="https://img.shields.io/badge/Tests-Passing-brightgreen" />
 </p>
 
@@ -8,6 +11,12 @@
 
 <p align="center">
   <strong>Interactive AI-driven tools for NASCAR race strategy analysis</strong>
+</p>
+
+<p align="center">
+  <a href="https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Open%20App-brightgreen" alt="Live Demo" />
+  </a>
 </p>
 
 <p align="center">
@@ -20,6 +29,23 @@
   <a href="#see-it-in-action">See It In Action</a> •
   <a href="#contact">Contact</a>
 </p>
+
+---
+
+## 🌐 **Try the Live Demo!**
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/)
+
+**Direct link:** https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/
+
+**What you can do in the live demo:**
+- 🔄 Compare multiple pit strategies side-by-side
+- 📊 See Monte Carlo simulation results with statistical analysis
+- 🎯 Find optimal pit timing with sensitivity analysis
+- 🏁 Simulate races with caution flags
+- ⚙️ Customize simulation parameters
+
+*No installation required - runs in your browser!*
 
 ---
 
@@ -43,9 +69,17 @@ Or use the provided script:
 ./run_dashboard.sh
 ```
 
-### Deploy on Streamlit Cloud (Free)
+### 🌐 Live Demo on Streamlit Cloud
 
-**🌐 Try the live demo:** [Coming Soon]
+**Access the interactive dashboard:** [nascar-ai-strategy-engine.streamlit.app](https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/)
+
+**Features available in the live demo:**
+- 📊 Strategy comparison using Monte Carlo simulations
+- 📈 Sensitivity analysis and pit timing optimization
+- 🏁 Live race simulation with caution flags
+- ⚙️ Configurable simulation parameters
+
+**Note:** The live demo is free and hosted on Streamlit Cloud. It may take a moment to load on first visit.
 
 Want to deploy your own copy? See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for step-by-step instructions.
 
@@ -196,13 +230,27 @@ During a trial period, I would:
 
 ## 🎬 See It In Action
 
+### 🌐 **Live Demo (Recommended - No Installation Required)**
+
+**Try the interactive dashboard now:** [nascar-ai-strategy-engine.streamlit.app](https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/)
+
+### 💻 **Run Locally**
+
+Want to run it on your own machine?
+
 ```bash
+# Clone the repository
+git clone https://github.com/leosky01/NASCAR-AI-Strategy-Engine.git
+cd NASCAR-AI-Strategy-Engine
+
+# Install dependencies
 pip install -r requirements.txt
-python train_caution_model.py
-./run_dashboard.sh
+
+# Run the dashboard
+streamlit run app.py
 ```
 
-<!-- TODO: Add position distribution visualization -->
+See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for detailed setup instructions.
 
 ---
 
@@ -226,13 +274,25 @@ python train_caution_model.py
 
 ---
 
-## 📬 Contact
+## 📬 Contact & Connect
 
-Email: leonardoschiavoni82@gmail.com  
-Telephone: +39 333 199 8914
-LinkedIn: linkedin.com/in/leonardo-schiavoni-665173340  
+**Leonardo Schiavoni**
+- Email: leonardoschiavoni82@gmail.com
+- Telephone: +39 333 199 8914
+- LinkedIn: [linkedin.com/in/leonardo-schiavoni-665173340](https://linkedin.com/in/leonardo-schiavoni-665173340)
+- GitHub: [github.com/leosky01](https://github.com/leosky01)
 
 ---
+
+<p align="center">
+  <strong>Ready to explore NASCAR strategy optimization?</strong><br>
+  <a href="https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/">
+    <img src="https://img.shields.io/badge/Try%20Live%20Demo-Open%20App-brightgreen" alt="Live Demo" />
+  </a>
+  <a href="https://github.com/leosky01/NASCAR-AI-Strategy-Engine">
+    <img src="https://img.shields.io/badge/GitHub-View%20Source-blue" alt="GitHub" />
+  </a>
+</p>
 
 <p align="center">
   <em>Built to demonstrate practical skills in motorsport analytics.</em>
