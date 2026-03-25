@@ -4,8 +4,6 @@ Tests for caution prediction features and models.
 import pytest
 import numpy as np
 import pandas as pd
-import sys
-sys.path.insert(0, '.')
 
 from src.features import extract_caution_features, prepare_training_data
 from src.models import CautionPredictor

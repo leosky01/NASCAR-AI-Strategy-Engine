@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 import numpy as np
 from config import DEFAULT_SIM_CONFIG
+from src.strategy import PitStop
 
 
 @dataclass
@@ -95,19 +96,6 @@ class CarState:
         return np.random.normal(0, 0.15 * self.physics.consistency)
 
 
-@dataclass
-class PitStop:
-    """
-    Pit stop configuration.
-
-    Represents a single pit stop event.
-    """
-    lap: int
-    duration: float = 19.5  # seconds (includes enter/exit/stop)
-    fuel_added: float = 100.0  # percentage
-    tires_changed: bool = True
-
-
 class RaceSimulator:
     """
     Physics-based NASCAR race simulator.
@@ -120,7 +108,8 @@ class RaceSimulator:
                  num_cars: int = 40,
                  num_laps: int = 200,
                  track_length: float = 2.5,
-                 random_seed: Optional[int] = None):
+                 random_seed: Optional[int] = None,
+                 caution_model: Optional['CautionPredictor'] = None):
         """
         Initialize simulator.
 
@@ -129,11 +118,13 @@ class RaceSimulator:
             num_laps: Total race laps
             track_length: Track length in miles
             random_seed: For reproducibility
+            caution_model: Optional ML model for caution prediction
         """
         self.num_cars = num_cars
         self.num_laps = num_laps
         self.track_length = track_length
         self.rng = np.random.RandomState(random_seed)
+        self.caution_model = caution_model
 
         # Load config
         self.config = DEFAULT_SIM_CONFIG
@@ -142,6 +133,7 @@ class RaceSimulator:
         self.cars: List[CarState] = []
         self.caution_active = False
         self.caution_remaining = 0
+        self.green_flag_run_length = 0  # Laps since last caution
         self.lap_history: List[Dict] = []
 
     def initialize_cars(self, car_physics: Optional[List[CarPhysics]] = None):
@@ -241,7 +233,7 @@ class RaceSimulator:
         # Cap at realistic maximum (dirty air can't make you 2+ seconds slower)
         return min(penalty, 1.0)
 
-    def simulate_lap(self, lap: int, strategy_pits: Dict[int, PitStop]) -> List[CarState]:
+    def simulate_lap(self, lap: int, strategy_pits: Dict[int, Dict[int, PitStop]]) -> List[CarState]:
         """
         Simulate a single lap for all cars.
 
@@ -250,7 +242,7 @@ class RaceSimulator:
 
         Args:
             lap: Current lap number
-            strategy_pits: Dict mapping lap to PitStop
+            strategy_pits: Dict mapping car_id to lap to PitStop
 
         Returns:
             Updated car states
@@ -258,9 +250,10 @@ class RaceSimulator:
         # First pass: handle pit stops and calculate tentative lap times (no traffic)
         tentative_lap_times = {}
         for car in self.cars:
-            # Check for pit stop
-            if lap in strategy_pits:
-                pit = strategy_pits[lap]
+            # Check for pit stop for this specific car
+            car_pits = strategy_pits.get(car.car_id, {})
+            if lap in car_pits:
+                pit = car_pits[lap]
                 car.cumulative_time += pit.duration
                 if pit.tires_changed:
                     car.tire_age = 0
@@ -273,7 +266,7 @@ class RaceSimulator:
                 tentative_lap_times[car.car_id] = tentative_time
 
             # Consume fuel and age tires (if not pitting or pit didn't change tires)
-            if lap not in strategy_pits or not strategy_pits[lap].tires_changed:
+            if lap not in car_pits or not car_pits[lap].tires_changed:
                 car.fuel_level -= self.config.fuel_consumption_per_lap
                 car.tire_age += 1
 
@@ -286,7 +279,8 @@ class RaceSimulator:
 
         final_lap_times = {}
         for car in self.cars:
-            if lap in strategy_pits:
+            car_pits = strategy_pits.get(car.car_id, {})
+            if lap in car_pits:
                 # Pitting car - lap time is already set to pit duration
                 car.current_lap_time = tentative_lap_times[car.car_id]
                 final_lap_times[car.car_id] = car.current_lap_time
@@ -306,6 +300,91 @@ class RaceSimulator:
 
         return self.cars
 
+    def _generate_default_strategy(self, car_id: int) -> List[PitStop]:
+        """
+        Generate a reasonable default pit strategy for a car.
+
+        Default strategy: pit every ~50 laps with fuel and tires.
+
+        Args:
+            car_id: Car identifier
+
+        Returns:
+            List of PitStop objects
+        """
+        pit_laps = []
+        lap = 50
+        while lap < self.num_laps:
+            # Add some variation based on car_id (simulates different team strategies)
+            variation = (car_id % 5) - 2  # -2 to +2
+            pit_lap = max(40, min(lap + variation, self.num_laps - 10))
+            pit_laps.append(pit_lap)
+            lap += 50
+
+        return [PitStop(lap=lap) for lap in pit_laps]
+
+    def _calculate_caution_probability(self, lap: int) -> float:
+        """
+        Calculate probability of a caution occurring on this lap.
+
+        Uses probabilistic model with optional ML enhancement.
+
+        Args:
+            lap: Current lap number
+
+        Returns:
+            Caution probability (0-1)
+        """
+        # If ML model is provided, use it
+        if self.caution_model is not None and self.caution_model.is_trained:
+            try:
+                # Calculate features for current race state
+                avg_tire_age = np.mean([car.tire_age for car in self.cars])
+                features = {
+                    'race_progress': lap / self.num_laps,
+                    'laps_remaining': max(0, self.num_laps - lap),
+                    'current_lap_norm': lap / self.num_laps,
+                    'cautions_so_far': sum(1 for h in self.lap_history if h.get('caution_active', False)),
+                    'laps_since_last_caution': self.green_flag_run_length,
+                    'caution_density': 0.0,  # Would need full history
+                    'green_flag_run_length': self.green_flag_run_length,
+                    'long_green_flag': int(self.green_flag_run_length > 40),
+                    'lap_time_variance': 0.0,  # Simplified
+                    'field_spread': 0.0,  # Simplified
+                    'avg_tire_age': avg_tire_age,
+                    'max_tire_age': max(car.tire_age for car in self.cars),
+                    'tired_cars_pct': np.mean([car.tire_age > 40 for car in self.cars]),
+                    'avg_position_change': 0.0,  # Simplified
+                    'max_position_change': 0.0,  # Simplified
+                    'position_volatility': 0.0,  # Simplified
+                    'risk_accumulation': (avg_tire_age / 50.0) * (self.green_flag_run_length / 50.0) * (lap / self.num_laps),
+                    'caution_likelihood_score': (avg_tire_age / 50.0) * 0.3 + (self.green_flag_run_length / 100.0) * 0.3 + (lap / self.num_laps) * 0.2
+                }
+                return self.caution_model.predict_caution_probability(features)
+            except Exception:
+                # Fall back to simple model if prediction fails
+                pass
+
+        # Simple probabilistic model (default)
+        base_prob = self.config.caution_base_prob
+
+        # Increase probability with tire wear across the field
+        avg_tire_age = np.mean([car.tire_age for car in self.cars])
+        tire_factor = 1.0 + (avg_tire_age / 50.0)  # Up to 2x probability
+
+        # Increase probability with long green flag runs
+        green_flag_factor = 1.0 + (self.green_flag_run_length / 100.0)  # Up to 2x
+
+        # Increase probability late in race
+        race_progress = lap / self.num_laps
+        late_race_factor = 1.0 + (race_progress * 0.5)  # Up to 1.5x
+
+        # Combine factors
+        prob = base_prob * tire_factor * green_flag_factor * late_race_factor
+
+        # Cap at reasonable maximum
+        return min(prob, 0.10)  # Max 10% per lap
+
     def simulate_race(self, strategy: Optional[Dict[int, List[PitStop]]] = None) -> Dict:
         """
         Simulate complete race.
@@ -322,18 +401,51 @@ class RaceSimulator:
         # Initialize
         self.initialize_cars()
 
-        # Flatten strategy for easy lookup by lap
-        strategy_pits = {}
-        for car_id, pits in strategy.items():
-            for pit in pits:
-                strategy_pits[pit.lap] = pit
+        # Reset caution state
+        self.caution_active = False
+        self.caution_remaining = 0
+        self.green_flag_run_length = 0
+
+        # Build complete strategy with defaults for cars without specified strategies
+        # Structure: strategy_pits[car_id][lap] = PitStop
+        strategy_pits: Dict[int, Dict[int, PitStop]] = {}
+
+        for car_id in range(self.num_cars):
+            if car_id in strategy and strategy[car_id]:
+                # Use provided strategy for this car
+                car_pits = {}
+                for pit in strategy[car_id]:
+                    car_pits[pit.lap] = pit
+                strategy_pits[car_id] = car_pits
+            else:
+                # Generate default strategy for this car
+                default_pits = self._generate_default_strategy(car_id)
+                car_pits = {pit.lap: pit for pit in default_pits}
+                strategy_pits[car_id] = car_pits
 
         # Clear history
         self.lap_history = []
 
         # Simulate each lap
         for lap in range(1, self.num_laps + 1):
+            # Check for caution triggering (only if not already under caution)
+            if not self.caution_active:
+                caution_prob = self._calculate_caution_probability(lap)
+                if self.rng.random() < caution_prob:
+                    # Caution triggered!
+                    self.caution_active = True
+                    self.caution_remaining = self.config.caution_duration_laps
+                    self.green_flag_run_length = 0
+
             self.cars = self.simulate_lap(lap, strategy_pits)
+
+            # Update caution state
+            if self.caution_active:
+                self.caution_remaining -= 1
+                if self.caution_remaining <= 0:
+                    self.caution_active = False
+            else:
+                self.green_flag_run_length += 1
 
             # Record history
             self.lap_history.append({
@@ -342,6 +454,7 @@ class RaceSimulator:
                 'lap_times': [car.current_lap_time for car in self.cars],
                 'tire_ages': [car.tire_age for car in self.cars],
                 'fuel_levels': [car.fuel_level for car in self.cars],
+                'caution_active': self.caution_active,
             })
 
         # Find winner

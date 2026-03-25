@@ -1,8 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Portfolio-Project-blue" />
-  <img src="https://img.shields.io/badge/Status-Production%20Ready-success" />
-  <img src="https://img.shields.io/badge/Tests-83%2F83%20Passing-brightgreen" />
-  <img src="https://img.shields.io/badge/Performance-68x%20Faster-brightgreen" />
+  <img src="https://img.shields.io/badge/Status-Work%20In%20Progress-yellow" />
+  <img src="https://img.shields.io/badge/Tests-Passing-brightgreen" />
 </p>
 
 <h1 align="center">🏎️ NASCAR AI Strategy Engine</h1>
@@ -38,7 +37,7 @@ Run locally:
 streamlit run app.py
 ```
 
-![Strategy Comparison](docs/images/strategy_comparison.png)
+<!-- TODO: Add screenshot after running dashboard -->
 
 ---
 
@@ -124,20 +123,20 @@ Estimate the probability of cautions during a race.
 
 ### 3. Monte Carlo Strategy Evaluation
 
-- Hundreds of simulations  
-- Statistical comparison of strategies  
-- Confidence intervals  
+- Hundreds of simulations
+- Statistical comparison of strategies
+- Confidence intervals
 
-![Strategy Comparison](docs/images/strategy_comparison.png)
+<!-- TODO: Add visualization after running simulations -->
 
 ---
 
 ### 4. Sensitivity Analysis & Optimization
 
-- Pit window optimization  
-- Risk/reward analysis  
+- Pit window optimization
+- Risk/reward analysis
 
-![Sensitivity Analysis](docs/images/sensitivity_analysis.png)
+<!-- TODO: Add visualization after running analysis -->
 
 ---
 
@@ -184,7 +183,7 @@ python train_caution_model.py
 ./run_dashboard.sh
 ```
 
-![Position Distribution](docs/images/position_distribution.png)
+<!-- TODO: Add position distribution visualization -->
 
 ---
 
@@ -196,7 +195,7 @@ python train_caution_model.py
 | Monte Carlo (200 sims) | 3.6 s |
 | Full workflow | 2.8 s |
 
-![Performance Metrics](docs/images/performance_metrics.png)
+<!-- TODO: Add performance metrics chart -->
 
 ---
 

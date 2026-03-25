@@ -3,9 +3,6 @@ Demo script for Monte Carlo strategy evaluation.
 
 Shows how to use the Monte Carlo engine to compare strategies.
 """
-import sys
-sys.path.insert(0, '.')
-
 import pandas as pd
 from src.monte_carlo import MonteCarloEvaluator, calculate_statistical_significance
 from src.strategy import PRESET_STRATEGIES

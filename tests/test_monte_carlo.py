@@ -4,8 +4,6 @@ Tests for Monte Carlo strategy evaluation engine.
 import pytest
 import numpy as np
 import pandas as pd
-import sys
-sys.path.insert(0, '.')
 
 from src.monte_carlo import (
     MonteCarloEvaluator,

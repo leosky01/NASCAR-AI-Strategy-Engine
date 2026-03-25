@@ -5,7 +5,6 @@ Measures and reports performance of all major components.
 """
 import sys
 import time
-sys.path.insert(0, '.')
 
 from src.simulator import RaceSimulator
 from src.monte_carlo import MonteCarloEvaluator

@@ -8,8 +8,6 @@ import pandas as pd
 from typing import Dict, List, Tuple, Optional
 from scipy.optimize import minimize_scalar
 from dataclasses import dataclass
-import sys
-sys.path.insert(0, '.')
 
 from src.monte_carlo import MonteCarloEvaluator, SimulationResult
 from src.strategy import Strategy, PitStop

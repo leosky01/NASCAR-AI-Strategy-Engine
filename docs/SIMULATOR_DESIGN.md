@@ -138,17 +138,58 @@ AFTER (Correct - Time-Based):
 ## 🧪 Validation Results
 
 ```
-✅ All 28 tests passing
-✅ 8/8 validation checks passing
+✅ All tests passing
 ✅ Reproducible with same seed
 ✅ Realistic lap times (45-65s)
 ✅ No zero lap times
 ✅ Positions determined by time
+✅ Caution triggering implemented
+✅ Car-specific pit strategies working
 ```
 
 ---
 
-## 💡 Interview Talking Points
+## ⚠️ Known Limitations
+
+**What the Simulator Does NOT Model:**
+
+### Race Features Not Implemented
+- Weather conditions (rain, temperature, humidity)
+- Qualifying order and starting position effects
+- Stage breaks (competition cautions at stage ends)
+- Wave-arounds and lucky dog rule
+- Overtime restart rules
+- Red flag conditions
+
+### Track Simplifications
+- Single generic track type
+- No track-specific characteristics (banking, surface type)
+- No groove modeling (high/low line differences)
+- Simplified oval (no road courses)
+
+### Car & Driver Simplifications
+- No setup variations (wedge, track bar, tire pressure)
+- No driver skill differences during cautions/pit stops
+- No mechanical failures (engine, transmission)
+- No accidents or spins (only cautions)
+- All cars use same pit crew performance
+
+### Strategy Limitations
+- No fuel-only stops vs. four-tire stops decision
+- No tire compound choices
+- No draft effects (superspeedway racing)
+- No teammate cooperation
+- No predictive strategy adjustment during race
+
+### Physics Simplifications
+- No aero effects from other cars
+- No tire temperature warmup
+- No brake wear
+- Simplified engine performance curve
+
+---
+
+## 💡 Design Rationale
 
 **Q: Why time-based positions instead of random swapping?**
 A: Random swapping doesn't capture how strategies actually work.
@@ -166,7 +207,7 @@ A: We pass a random_seed to the simulator and use self.rng
    This guarantees the same seed produces identical results.
 
 **Q: What's the most complex part of the model?**
-A: Traffic effects - we iterate twice to calculate penalties
+A: Traffic effects - we iterate to calculate penalties
    because positions affect traffic, which affects lap times,
-   which affects positions. The iterative approach converges
+   which affects positions. The approach converges
    to a consistent solution.

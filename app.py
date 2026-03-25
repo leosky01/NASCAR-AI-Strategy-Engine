@@ -9,8 +9,6 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
-import sys
-sys.path.insert(0, '.')
 
 from src.simulator import RaceSimulator
 from src.monte_carlo import MonteCarloEvaluator

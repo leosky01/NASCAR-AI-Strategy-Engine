@@ -3,9 +3,6 @@ Fast training script for caution prediction model.
 
 Samples data for faster training during development.
 """
-import sys
-sys.path.insert(0, '.')
-
 import pandas as pd
 import numpy as np
 from src.features import prepare_training_data

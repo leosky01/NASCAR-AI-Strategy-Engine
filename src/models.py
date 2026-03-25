@@ -284,8 +284,6 @@ def train_and_evaluate(data_path: str = 'data/race_data.csv',
     Returns:
         Trained CautionPredictor model
     """
-    import sys
-    sys.path.insert(0, '.')
     from src.features import prepare_training_data
     import os
 

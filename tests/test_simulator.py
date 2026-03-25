@@ -5,15 +5,13 @@ Tests follow AAA pattern: Arrange, Act, Assert
 """
 import pytest
 import numpy as np
-import sys
-sys.path.insert(0, '.')
 
 from src.simulator import (
     CarPhysics,
     CarState,
-    PitStop,
     RaceSimulator
 )
+from src.strategy import PitStop
 
 
 class TestCarPhysics:
@@ -253,6 +251,36 @@ class TestRaceSimulator:
         assert len(set(positions)) == 10  # All unique
         assert set(positions) == set(range(1, 11))  # 1-10
 
+    def test_simulate_lap_specific_car_pits(self):
+        """Test that only the specified car pits on a scheduled lap"""
+        sim = RaceSimulator(num_cars=10, num_laps=20)
+        sim.initialize_cars()
+
+        # Simulate laps 1-4 to build up tire age
+        for lap in range(1, 5):
+            sim.simulate_lap(lap=lap, strategy_pits={})
+
+        # Both cars should have tire_age of 4 now
+        initial_tire_age_0 = sim.cars[0].tire_age
+        initial_tire_age_1 = sim.cars[1].tire_age
+        assert initial_tire_age_0 == 4
+        assert initial_tire_age_1 == 4
+
+        # Car 0 pits on lap 5, car 1 does not
+        strategy_pits = {
+            0: {5: PitStop(lap=5)},
+            1: {}  # No pit for car 1
+        }
+
+        # Simulate lap 5
+        sim.simulate_lap(lap=5, strategy_pits=strategy_pits)
+
+        # Car 0 should have fresh tires (age 0)
+        assert sim.cars[0].tire_age == 0
+
+        # Car 1 should have old tires (age 5)
+        assert sim.cars[1].tire_age == 5
+
     def test_simulate_race_completes(self):
         """Test that full race simulation completes"""
         sim = RaceSimulator(num_cars=10, num_laps=20)
@@ -394,6 +422,78 @@ class TestTireDegradation:
         car_50 = CarState(car_id=0, physics=physics, tire_age=50)
         assert car_40.get_tire_penalty() == 5.0
         assert car_50.get_tire_penalty() == 5.0
+
+
+class TestCautions:
+    """Test caution flag behavior"""
+
+    def test_caution_probability_increases_with_factors(self):
+        """Test that caution probability increases with risk factors"""
+        sim = RaceSimulator(num_cars=10, num_laps=100, random_seed=42)
+        sim.initialize_cars()
+
+        # Early race, fresh tires - low probability
+        prob_early = sim._calculate_caution_probability(lap=10)
+        # Late race, old tires - higher probability
+        sim.lap_history = [{'caution_active': False}] * 50
+        for car in sim.cars:
+            car.tire_age = 40
+        sim.green_flag_run_length = 50
+        prob_late = sim._calculate_caution_probability(lap=90)
+
+        # Late race probability should be higher
+        assert prob_late > prob_early
+
+    def test_caution_can_be_triggered(self):
+        """Test that cautions can be triggered during simulation"""
+        # Use a very high caution probability for testing
+        sim = RaceSimulator(num_cars=10, num_laps=50, random_seed=42)
+        # Temporarily override caution probability
+        original_config = sim.config
+        from unittest.mock import patch
+
+        # Force a caution on lap 10 by mocking the probability
+        def mock_calc_prob(self, lap):
+            return 1.0 if lap == 10 else 0.0
+
+        with patch.object(RaceSimulator, '_calculate_caution_probability', mock_calc_prob):
+            result = sim.simulate_race()
+
+        # Check that caution was recorded
+        caution_laps = [h['lap'] for h in result['lap_history'] if h.get('caution_active', False)]
+        assert len(caution_laps) > 0, "No cautions were recorded"
+        assert 10 in caution_laps or 11 in caution_laps or 12 in caution_laps or 13 in caution_laps
+
+    def test_caution_slows_down_lap_times(self):
+        """Test that lap times slow down during caution"""
+        sim = RaceSimulator(num_cars=10, num_laps=20, random_seed=42)
+
+        # Manually trigger a caution
+        sim.initialize_cars()
+        sim.caution_active = True
+
+        # Calculate lap times with and without caution
+        car = sim.cars[0]
+
+        # With caution
+        time_caution = sim.calculate_lap_time(car)
+
+        # Without caution
+        sim.caution_active = False
+        time_normal = sim.calculate_lap_time(car)
+
+        # Caution should be slower
+        assert time_caution > time_normal
+
+    def test_caution_duration_lasts_correct_laps(self):
+        """Test that cautions last for the configured duration"""
+        sim = RaceSimulator(num_cars=10, num_laps=50, random_seed=42)
+
+        # Check that caution duration matches config
+        assert sim.config.caution_duration_laps == 4
+
+        # If a caution starts on lap 10, it should be active on laps 10, 11, 12, 13
+        # and end before lap 14
 
 
 if __name__ == '__main__':

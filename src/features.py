@@ -13,7 +13,8 @@ from scipy import stats
 def extract_caution_features(race_df: pd.DataFrame,
                             lap: int,
                             car_id: int = None,
-                            window: int = 10) -> Dict[str, float]:
+                            window: int = 10,
+                            total_laps: int = 200) -> Dict[str, float]:
     """
     Extract features for predicting caution probability at a given lap.
 
@@ -29,6 +30,7 @@ def extract_caution_features(race_df: pd.DataFrame,
         lap: Current lap number
         car_id: Optional car ID for car-specific features
         window: Rolling window for statistics
+        total_laps: Total laps in the race
 
     Returns:
         Dict of feature names to values
@@ -38,14 +40,14 @@ def extract_caution_features(race_df: pd.DataFrame,
 
     # Handle early laps (no history)
     if len(history) == 0 or lap < window:
-        return _get_default_features()
+        return _get_default_features(total_laps=total_laps)
 
     features = {}
 
     # ===== RACE CONTEXT FEATURES =====
-    features['race_progress'] = lap / 200.0  # Normalized 0-1
-    features['laps_remaining'] = max(0, 200 - lap)
-    features['current_lap_norm'] = lap / 200.0
+    features['race_progress'] = lap / float(total_laps)  # Normalized 0-1
+    features['laps_remaining'] = max(0, total_laps - lap)
+    features['current_lap_norm'] = lap / float(total_laps)
 
     # ===== CAUTION HISTORY FEATURES =====
     caution_laps = history[history['is_caution_lap'] == 1]['lap']
@@ -130,11 +132,11 @@ def extract_caution_features(race_df: pd.DataFrame,
     return features
 
 
-def _get_default_features() -> Dict[str, float]:
+def _get_default_features(total_laps: int = 200) -> Dict[str, float]:
     """Return default features for early laps with no history"""
     return {
         'race_progress': 0.0,
-        'laps_remaining': 200,
+        'laps_remaining': total_laps,
         'current_lap_norm': 0.0,
         'cautions_so_far': 0,
         'laps_since_last_caution': 0,
@@ -155,7 +157,8 @@ def _get_default_features() -> Dict[str, float]:
 
 
 def prepare_training_data(race_df: pd.DataFrame,
-                         prediction_horizon: int = 5) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+                         prediction_horizon: int = 5,
+                         total_laps: int = 200) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     """
     Prepare training data for caution prediction.
 
@@ -165,6 +168,7 @@ def prepare_training_data(race_df: pd.DataFrame,
     Args:
         race_df: Complete race data
         prediction_horizon: Lookahead window (laps)
+        total_laps: Total laps in the race
 
     Returns:
         X: Feature matrix (n_samples, n_features)
@@ -184,7 +188,7 @@ def prepare_training_data(race_df: pd.DataFrame,
         # Need at least 10 laps of history
         for lap in range(10, max_lap - prediction_horizon):
             # Extract features
-            features = extract_caution_features(race, lap)
+            features = extract_caution_features(race, lap, total_laps=total_laps)
             X.append(list(features.values()))
 
             # Save feature names on first iteration

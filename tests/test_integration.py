@@ -6,8 +6,6 @@ Tests that all components work together properly.
 import pytest
 import numpy as np
 import pandas as pd
-import sys
-sys.path.insert(0, '.')
 
 from src.simulator import RaceSimulator, CarPhysics
 from src.models import CautionPredictor

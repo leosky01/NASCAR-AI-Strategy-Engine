@@ -10,8 +10,6 @@ from dataclasses import dataclass
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import pandas as pd
-import sys
-sys.path.insert(0, '.')
 
 from src.simulator import RaceSimulator, PitStop
 from src.strategy import Strategy
