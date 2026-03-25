@@ -69,29 +69,6 @@ Or use the provided script:
 ./run_dashboard.sh
 ```
 
-### 🌐 Live Demo on Streamlit Cloud
-
-**Access the interactive dashboard:** [nascar-ai-strategy-engine.streamlit.app](https://nascar-ai-strategy-engine-7eakf3pk8e7upe8av6pdaq.streamlit.app/)
-
-**Features available in the live demo:**
-- 📊 Strategy comparison using Monte Carlo simulations
-- 📈 Sensitivity analysis and pit timing optimization
-- 🏁 Live race simulation with caution flags
-- ⚙️ Configurable simulation parameters
-
-**Note:** The live demo is free and hosted on Streamlit Cloud. It may take a moment to load on first visit.
-
-Want to deploy your own copy? See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for step-by-step instructions.
-
-Quick steps:
-1. Push code to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repository
-4. Select `app.py` as main file
-5. Click "Deploy" 🚀
-
----
-
 ## 👋 About This Project
 
 **This is a portfolio project demonstrating practical skills in data science, simulation, and optimization applied to motorsport strategy.**
