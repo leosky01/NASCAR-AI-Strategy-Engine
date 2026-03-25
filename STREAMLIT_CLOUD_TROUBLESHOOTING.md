@@ -15,6 +15,32 @@
 
 ---
 
+### Issue: "ModuleNotFoundError: No module named 'altair.vegalite.v4'"
+
+**Cause:** Version incompatibility between Streamlit and altair.
+
+**Error Message:**
+```
+ModuleNotFoundError: No module named 'altair.vegalite.v4'
+```
+
+**Solution:** ✅ ALREADY FIXED - Added altair version constraint to requirements.txt
+
+**Details:**
+- altair 6.0.0+ removed the `vegalite.v4` API
+- Streamlit 1.x still depends on the old API
+- Fixed by pinning: `altair>=5.0.0,<6.0.0`
+- Also added version constraints for all packages to prevent similar issues
+
+**Verification:**
+```bash
+# Check requirements.txt has altair pinned
+grep altair requirements.txt
+# Should show: altair>=5.0.0,<6.0.0
+```
+
+---
+
 ### Issue: "ImportError: No module named 'src'"
 
 **Cause:** Package structure not recognized by Streamlit Cloud.
