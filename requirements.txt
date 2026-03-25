@@ -10,7 +10,8 @@ scikit-learn>=1.0.0
 # Visualization
 plotly>=5.0.0
 streamlit>=1.10.0
-kaleido>=0.2.0
+# kaleido removed - not needed for Streamlit Cloud deployment
+# (Streamlit handles Plotly rendering in the browser)
 
 # Parallel processing
 joblib>=1.1.0

@@ -42,7 +42,8 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
+where = ["."]
 include = ["src*"]
 
 [tool.setuptools.package-dir]
-"" = "."
+"nascar_strategy" = "src"
