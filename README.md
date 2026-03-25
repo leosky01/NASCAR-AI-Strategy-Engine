@@ -225,9 +225,6 @@ pip install -r requirements.txt
 
 # Run the dashboard
 streamlit run app.py
-```
-
-See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for detailed setup instructions.
 
 ---
 
