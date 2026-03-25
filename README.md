@@ -63,12 +63,6 @@ This project includes a fully interactive Streamlit dashboard for:
 streamlit run app.py
 ```
 
-Or use the provided script:
-
-```bash
-./run_dashboard.sh
-```
-
 ## 👋 About This Project
 
 **This is a portfolio project demonstrating practical skills in data science, simulation, and optimization applied to motorsport strategy.**
