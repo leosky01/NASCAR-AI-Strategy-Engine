@@ -27,17 +27,34 @@
 
 This project includes a fully interactive Streamlit dashboard for:
 
-- Strategy comparison using Monte Carlo simulations  
-- Pit stop optimization  
-- Live race simulation  
+- Strategy comparison using Monte Carlo simulations
+- Pit stop optimization
+- Live race simulation
 
-Run locally:
+### Run Locally
 
 ```bash
 streamlit run app.py
 ```
 
-<!-- TODO: Add screenshot after running dashboard -->
+Or use the provided script:
+
+```bash
+./run_dashboard.sh
+```
+
+### Deploy on Streamlit Cloud (Free)
+
+**🌐 Try the live demo:** [Coming Soon]
+
+Want to deploy your own copy? See [STREAMLIT_CLOUD_DEPLOYMENT.md](STREAMLIT_CLOUD_DEPLOYMENT.md) for step-by-step instructions.
+
+Quick steps:
+1. Push code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your GitHub repository
+4. Select `app.py` as main file
+5. Click "Deploy" 🚀
 
 ---
 
@@ -156,10 +173,12 @@ The Streamlit dashboard provides an interface to:
 
 ### Technical Skills
 
-- Data science and statistical analysis  
-- Machine learning (XGBoost, feature engineering)  
-- Simulation and optimization  
-- Software engineering best practices  
+- Data science and statistical analysis
+- Machine learning (XGBoost, feature engineering)
+- Simulation and optimization
+- Software engineering best practices
+- Cloud deployment (Streamlit Cloud, Docker)
+- Interactive visualization (Streamlit, Plotly)  
 
 ### What I'm Looking For
 
