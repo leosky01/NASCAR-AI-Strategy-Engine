@@ -623,9 +623,20 @@ with tab4:
     with col1:
         st.subheader("Configure Race")
 
+        st.info("💡 Configure your car (Car #0). All other cars use auto-generated settings.")
+
+        # Starting position
+        starting_position = st.slider(
+            "Starting Position",
+            min_value=1,
+            max_value=num_cars,
+            value=1,
+            help="Your starting position (1 = pole position)"
+        )
+
         # Quick strategy config
         race_strategy_name = st.selectbox(
-            "Strategy",
+            "Your Car's Strategy",
             list(PRESET_STRATEGIES.keys()),
             index=0,
             key='race_strategy'
@@ -658,15 +669,40 @@ with tab4:
         strategy = custom_strategy if custom_strategy else PRESET_STRATEGIES[race_strategy_name]
 
         st.write(f"Simulating race with {strategy.name} strategy...")
+        st.info(f"ℹ️ Starting position: {starting_position} | Your car: Car #0")
 
         # Run simulation
         sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
 
         with st.spinner("Racing..."):
-            result = sim.simulate_race()
+            # Set starting position by adjusting base lap times
+            # Initialize cars first to get the distribution
+            sim.initialize_cars()
+
+            # Get all base lap times and sort them
+            base_times = [car.physics.base_lap_time for car in sim.cars]
+            base_times.sort()
+
+            # Set our car's base lap time to match desired starting position
+            # Position 1 = fastest, Position 40 = slowest
+            if 1 <= starting_position <= len(base_times):
+                sim.cars[0].physics.base_lap_time = base_times[starting_position - 1]
+            else:
+                st.warning(f"Invalid starting position. Using position 1.")
+                sim.cars[0].physics.base_lap_time = base_times[0]
+
+            # Apply the selected strategy to car #0 (your car)
+            # All other cars will use auto-generated default strategies
+            our_car_strategy = {
+                0: [PitStop(lap=lap) for lap in strategy.pit_stops]
+            }
+            result = sim.simulate_race(strategy=our_car_strategy)
 
         # Display results
         st.success("🏁 Race Complete!")
+
+        # Starting position info
+        st.info(f"📍 Starting Position: {starting_position} | Finishing Position: {result['final_positions'][0]}")
 
         # Winner
         winner = result['winner']
