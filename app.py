@@ -693,8 +693,9 @@ with tab4:
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
+            # Use the strategy's pit stops directly (they're already PitStop objects)
             our_car_strategy = {
-                0: [PitStop(lap=lap) for lap in strategy.pit_stops]
+                0: strategy.pit_stops
             }
             result = sim.simulate_race(strategy=our_car_strategy)
 
