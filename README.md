@@ -178,7 +178,7 @@ The Streamlit dashboard provides an interface to:
 
 ---
 
-## 🆕 Latest Features (2026)
+## 🆕 Latest Features 
 
 ### Probabilistic Decision Engine
 
