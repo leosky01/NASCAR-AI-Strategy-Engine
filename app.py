@@ -687,18 +687,17 @@ with tab4:
             # First, initialize to discover car physics (base lap times)
             sim.initialize_cars()
 
-            # Get all cars' base lap times and sort
+            # Save all physics and sort by base lap time to find target position
+            all_physics = [car.physics for car in sim.cars]
             all_base_times = [(i, car.physics.base_lap_time) for i, car in enumerate(sim.cars)]
-            all_base_times.sort(key=lambda x: x[1])  # Sort by time
+            all_base_times.sort(key=lambda x: x[1])  # Sort by time (P1=fastest)
 
-            # Find the physics that correspond to desired starting position
-            # Position 1 = fastest, Position 40 = slowest
+            # Swap car #0's physics with the car at the desired starting position
             if 1 <= starting_position <= len(all_base_times):
-                target_car_idx, target_time = all_base_times[starting_position - 1]
-                target_physics = sim.cars[target_car_idx].physics
+                target_car_idx = all_base_times[starting_position - 1][0]
+                all_physics[0], all_physics[target_car_idx] = all_physics[target_car_idx], all_physics[0]
             else:
                 st.warning(f"Invalid starting position. Using position 1.")
-                target_physics = sim.cars[0].physics
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
@@ -707,11 +706,10 @@ with tab4:
             }
 
             # simulate_race() calls initialize_cars() internally, so we
-            # monkey-patch to re-apply our physics swap right after init
+            # patch it to reuse the same physics (with the swap applied)
             original_init = sim.initialize_cars
             def patched_init():
-                original_init()
-                sim.cars[0].physics = target_physics
+                original_init(car_physics=all_physics)
             sim.initialize_cars = patched_init
 
             result = sim.simulate_race(strategy=our_car_strategy)
