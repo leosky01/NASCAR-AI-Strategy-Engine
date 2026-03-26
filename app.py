@@ -897,7 +897,9 @@ with tab5:
         }
 
         st.markdown(f"### {rec_color.get(decision.recommendation, '⚪')} {decision.recommendation.replace('_', ' ').upper()}")
-        st.write(f"**Probability:** {decision.probability * 100:.1f}% confidence that {decision.recommendation.replace('_', ' ')} is better")
+        # decision.probability is P(pit is better). Show the correct % for the recommendation.
+        display_prob = decision.probability if decision.recommendation == 'pit' else (1 - decision.probability)
+        st.write(f"**Probability:** {display_prob * 100:.1f}% confidence that {decision.recommendation.replace('_', ' ')} is better")
         st.write(f"**Confidence Level:** {decision.confidence.upper()} ({decision.sample_size} total simulations)")
 
         # Detailed comparison
