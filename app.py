@@ -705,26 +705,31 @@ with tab4:
             sim.config.tire_degradation_rate = track_profile.tire_degradation_rate
             sim.config.caution_base_prob = track_profile.caution_base_prob
             sim.config.traffic_penalty_factor = track_profile.traffic_penalty_factor
+            sim.config.min_lap_time = track_profile.base_lap_time - 3.0
+            sim.config.max_lap_time = track_profile.base_lap_time + 7.0
             sim.track_length = track_profile.length_miles
             sim.stage_laps = [track_profile.stage1_end, track_profile.stage2_end]
             sim.initialize_cars()
 
             # Adjust car #0's performance to match requested grid
-            # Find the car at the target position and copy all their physics
             target_positions = {
                 "Front Row (P1-P5)": 3,
                 "Mid-Pack (P15-P25)": 20,
                 "Back Row (P35-P40)": 38
             }
-
             target_pos = target_positions[starting_grid]
 
-            # Sort cars by base_lap_time to find approximate target
-            all_cars_by_time = sorted(enumerate(sim.cars), key=lambda x: x[1].physics.base_lap_time)
-            target_car_idx = all_cars_by_time[target_pos - 1][0]
+            # Collect all physics and sort by speed to find target position
+            all_physics = [car.physics for car in sim.cars]
+            indices_by_speed = sorted(range(len(all_physics)), key=lambda i: all_physics[i].base_lap_time)
+            target_idx = indices_by_speed[target_pos - 1]
 
-            # Copy ALL physics from target car
-            sim.cars[0].physics = sim.cars[target_car_idx].physics
+            # Swap car #0's physics with the target position's physics
+            # This ensures the field stays consistent (no duplicate physics)
+            all_physics[0], all_physics[target_idx] = all_physics[target_idx], all_physics[0]
+
+            # Re-initialize cars with the swapped physics
+            sim.initialize_cars(car_physics=all_physics)
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
@@ -732,7 +737,7 @@ with tab4:
                 0: strategy.pit_stops
             }
 
-            # Simulate the race (skip initialization since we've already set up car physics)
+            # Simulate the race (skip initialization since we've set up car physics)
             result = sim.simulate_race(strategy=our_car_strategy, skip_init=True)
 
             # Determine actual starting position and grid

@@ -65,6 +65,8 @@ def run_single_simulation(sim_config: Dict,
             simulator.config.tire_degradation_rate = tp.tire_degradation_rate
             simulator.config.caution_base_prob = tp.caution_base_prob
             simulator.config.traffic_penalty_factor = tp.traffic_penalty_factor
+            simulator.config.min_lap_time = tp.base_lap_time - 3.0
+            simulator.config.max_lap_time = tp.base_lap_time + 7.0
             simulator.track_length = tp.length_miles
             simulator.stage_laps = [tp.stage1_end, tp.stage2_end]
 
