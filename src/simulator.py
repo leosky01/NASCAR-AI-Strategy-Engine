@@ -8,6 +8,7 @@ Positions are determined by sorting cumulative race times, ensuring
 physical consistency (not random position swapping).
 """
 from dataclasses import dataclass, field
+from copy import deepcopy
 from typing import List, Dict, Optional, Tuple
 import numpy as np
 from config import DEFAULT_SIM_CONFIG
@@ -136,8 +137,8 @@ class RaceSimulator:
         self.rng = np.random.RandomState(random_seed)
         self.caution_model = caution_model
 
-        # Load config
-        self.config = DEFAULT_SIM_CONFIG
+        # Load config (deep copy to avoid mutating global default)
+        self.config = deepcopy(DEFAULT_SIM_CONFIG)
 
         # Simulation state
         self.cars: List[CarState] = []

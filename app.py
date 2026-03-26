@@ -15,6 +15,7 @@ from src.monte_carlo import MonteCarloEvaluator, SimulationResult
 from src.strategy import Strategy, PitStop, PRESET_STRATEGIES
 from src.sensitivity import StrategySensitivityAnalyzer, create_sensitivity_plot
 from src.decision_analyzer import ProbabilisticDecisionEngine, create_decision_summary
+from config import TRACK_PROFILES, TrackProfile
 
 # Page configuration
 st.set_page_config(
@@ -49,14 +50,30 @@ st.markdown('<h1 class="main-title">🏎️ NASCAR AI Strategy Engine</h1>', uns
 # Sidebar
 st.sidebar.header("⚙️ Configuration")
 
+# Track selection
+st.sidebar.subheader("🏁 Track")
+selected_track_key = st.sidebar.selectbox(
+    "Select Track",
+    list(TRACK_PROFILES.keys()),
+    index=1,  # Default: Charlotte
+    help="Each track has different tire wear, caution rates, and race length"
+)
+track_profile = TRACK_PROFILES[selected_track_key]
+
+# Show track info
+st.sidebar.caption(f"📍 {track_profile.name}")
+st.sidebar.caption(f"{track_profile.description}")
+st.sidebar.caption(f"📏 {track_profile.length_miles} mi | 🔄 {track_profile.num_laps} laps | Stages: {track_profile.stage1_end}/{track_profile.stage2_end}")
+
 # Simulation settings
 st.sidebar.subheader("Race Configuration")
 num_cars = st.sidebar.slider("Number of Cars", 10, 43, 40, 5)
-num_laps = st.sidebar.slider("Number of Laps", 50, 200, 100, 10)
+num_laps = track_profile.num_laps
 
 sim_config = {
     'num_cars': num_cars,
-    'num_laps': num_laps
+    'num_laps': num_laps,
+    'track_profile': selected_track_key
 }
 
 # Monte Carlo settings
@@ -683,6 +700,13 @@ with tab4:
         with st.spinner("Simulating..."):
             # Create simulator with fixed seed for reproducibility
             sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps, random_seed=42)
+            # Apply track-specific parameters
+            sim.config.base_lap_time = track_profile.base_lap_time
+            sim.config.tire_degradation_rate = track_profile.tire_degradation_rate
+            sim.config.caution_base_prob = track_profile.caution_base_prob
+            sim.config.traffic_penalty_factor = track_profile.traffic_penalty_factor
+            sim.track_length = track_profile.length_miles
+            sim.stage_laps = [track_profile.stage1_end, track_profile.stage2_end]
             sim.initialize_cars()
 
             # Adjust car #0's performance to match requested grid
@@ -852,7 +876,7 @@ with tab4:
 # ============================================================================
 with tab5:
     st.header("⚡ Live Race Decisions")
-    st.write("Get real-time probabilistic recommendations for pit vs. stay out decisions")
+    st.write(f"Get real-time probabilistic recommendations for **{track_profile.name}** ({track_profile.length_miles} mi, {num_laps} laps)")
 
     # Initialize decision engine
     @st.cache_resource
@@ -869,7 +893,7 @@ with tab5:
 
         # Race state inputs
         col_a, col_b = st.columns(2)
-        current_lap = col_a.number_input("Current Lap", min_value=1, max_value=200, value=80)
+        current_lap = col_a.number_input("Current Lap", min_value=1, max_value=num_laps, value=min(80, num_laps // 2))
         current_position = col_b.number_input("Current Position", min_value=1, max_value=43, value=15)
 
         col_c, col_d = st.columns(2)

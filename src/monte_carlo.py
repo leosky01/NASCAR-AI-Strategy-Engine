@@ -55,6 +55,19 @@ def run_single_simulation(sim_config: Dict,
         random_seed=random_seed
     )
 
+    # Apply track-specific overrides if a track profile is specified
+    if 'track_profile' in sim_config:
+        from config import TRACK_PROFILES
+        track_key = sim_config['track_profile']
+        if track_key in TRACK_PROFILES:
+            tp = TRACK_PROFILES[track_key]
+            simulator.config.base_lap_time = tp.base_lap_time
+            simulator.config.tire_degradation_rate = tp.tire_degradation_rate
+            simulator.config.caution_base_prob = tp.caution_base_prob
+            simulator.config.traffic_penalty_factor = tp.traffic_penalty_factor
+            simulator.track_length = tp.length_miles
+            simulator.stage_laps = [tp.stage1_end, tp.stage2_end]
+
     # Convert Strategy to simulator's expected format
     # Simulator expects: Dict[car_id, List[PitStop]]
     # We only control our car (car_id = our_car_index)

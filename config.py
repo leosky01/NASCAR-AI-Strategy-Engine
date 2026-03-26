@@ -122,6 +122,86 @@ class TireModelConfig:
     synthetic_samples_per_track: int = 1000
 
 
+@dataclass
+class TrackProfile:
+    """Track-specific race parameters."""
+    name: str
+    length_miles: float
+    num_laps: int
+    stage1_end: int
+    stage2_end: int
+    base_lap_time: float  # seconds
+    tire_degradation_rate: float  # seconds per lap
+    caution_base_prob: float
+    traffic_penalty_factor: float
+    description: str
+
+
+# Real NASCAR track profiles with realistic parameters
+TRACK_PROFILES = {
+    'Phoenix': TrackProfile(
+        name='Phoenix Raceway',
+        length_miles=1.0,
+        num_laps=312,
+        stage1_end=75,
+        stage2_end=190,
+        base_lap_time=27.0,
+        tire_degradation_rate=0.10,
+        caution_base_prob=0.015,
+        traffic_penalty_factor=0.7,
+        description='1-mile oval, moderate banking (11°), high tire wear'
+    ),
+    'Charlotte': TrackProfile(
+        name='Charlotte Motor Speedway',
+        length_miles=1.5,
+        num_laps=267,
+        stage1_end=65,
+        stage2_end=130,
+        base_lap_time=30.5,
+        tire_degradation_rate=0.08,
+        caution_base_prob=0.012,
+        traffic_penalty_factor=0.8,
+        description='1.5-mile quad-oval, 24° banking, moderate tire wear'
+    ),
+    'Darlington': TrackProfile(
+        name='Darlington Raceway',
+        length_miles=1.366,
+        num_laps=293,
+        stage1_end=70,
+        stage2_end=185,
+        base_lap_time=29.0,
+        tire_degradation_rate=0.13,
+        caution_base_prob=0.018,
+        traffic_penalty_factor=0.9,
+        description='1.366-mile egg-shaped oval, 25° banking, "Too Tough to Tame" — very high tire wear'
+    ),
+    'Bristol': TrackProfile(
+        name='Bristol Motor Speedway',
+        length_miles=0.533,
+        num_laps=500,
+        stage1_end=125,
+        stage2_end=250,
+        base_lap_time=16.0,
+        tire_degradation_rate=0.11,
+        caution_base_prob=0.020,
+        traffic_penalty_factor=1.0,
+        description='0.533-mile short track, 26° banking, high caution rate, close racing'
+    ),
+    'Talladega': TrackProfile(
+        name='Talladega Superspeedway',
+        length_miles=2.66,
+        num_laps=188,
+        stage1_end=60,
+        stage2_end=120,
+        base_lap_time=50.0,
+        tire_degradation_rate=0.04,
+        caution_base_prob=0.010,
+        traffic_penalty_factor=1.2,
+        description='2.66-mile superspeedway, 33° banking, pack racing, low tire wear'
+    )
+}
+
+
 # Default configurations
 DEFAULT_SIM_CONFIG = SimulatorConfig()
 DEFAULT_MODEL_CONFIG = ModelConfig()
