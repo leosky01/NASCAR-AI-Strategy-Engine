@@ -228,7 +228,7 @@ class RaceSimulator:
             for i in range(self.num_cars)
         ]
 
-    def calculate_lap_time(self, car: CarState, traffic_penalty: float = 0.0, traffic_density: float = 0.0) -> float:
+    def calculate_lap_time(self, car: CarState, traffic_penalty: float = 0.0, traffic_density: float = 0.0, skip_noise: bool = False) -> float:
         """
         Calculate lap time from physical components.
 
@@ -238,6 +238,7 @@ class RaceSimulator:
             car: Car state
             traffic_penalty: Time penalty from following slower cars
             traffic_density: Traffic density (0-1) for GAM tire model
+            skip_noise: If True, skip random noise (useful for deterministic first lap)
 
         Returns:
             Lap time in seconds
@@ -247,9 +248,12 @@ class RaceSimulator:
             car.physics.base_lap_time +
             car.get_tire_penalty(self.tire_model_manager, traffic_density) +
             car.get_fuel_penalty() +
-            traffic_penalty +
-            car.get_noise()
+            traffic_penalty
         )
+
+        # Add noise (unless skipped)
+        if not skip_noise:
+            lap_time += car.get_noise()
 
         # Cautions slow everyone down
         if self.caution_active:
@@ -321,7 +325,8 @@ class RaceSimulator:
                 tentative_lap_times[car.car_id] = pit.duration
             else:
                 # Calculate tentative lap time (without traffic)
-                tentative_time = self.calculate_lap_time(car, traffic_penalty=0.0)
+                # Skip noise on first lap for deterministic starting positions
+                tentative_time = self.calculate_lap_time(car, traffic_penalty=0.0, skip_noise=(lap == 1))
                 tentative_lap_times[car.car_id] = tentative_time
 
             # Consume fuel and age tires (if not pitting or pit didn't change tires)
@@ -330,9 +335,9 @@ class RaceSimulator:
                 car.tire_age += 1
 
         # Second pass: apply traffic effects and finalize lap times
-        # First iteration: calculate with current positions
+        # Sort by tentative lap times to calculate realistic traffic penalties
         sorted_times = sorted(
-            [(car.car_id, car.cumulative_time) for car in self.cars],
+            [(car.car_id, car.cumulative_time + tentative_lap_times[car.car_id]) for car in self.cars],
             key=lambda x: x[1]
         )
 
@@ -348,13 +353,10 @@ class RaceSimulator:
                 # Calculate traffic density for GAM model
                 traffic_density = self._calculate_traffic_density(car, sorted_times)
 
-                # Regular lap - apply traffic penalty
+                # Regular lap - apply traffic penalty to tentative time
+                # (Don't recalculate lap time, just add traffic penalty to avoid regenerating noise)
                 traffic_penalty = self.calculate_traffic_penalty(car, sorted_times)
-                final_time = self.calculate_lap_time(
-                    car,
-                    traffic_penalty=traffic_penalty,
-                    traffic_density=traffic_density
-                )
+                final_time = tentative_lap_times[car.car_id] + traffic_penalty
                 final_lap_times[car.car_id] = final_time
                 car.current_lap_time = final_time
                 car.cumulative_time += final_time
@@ -451,12 +453,13 @@ class RaceSimulator:
         # Cap at reasonable maximum
         return min(prob, 0.10)  # Max 10% per lap
 
-    def simulate_race(self, strategy: Optional[Dict[int, List[PitStop]]] = None) -> Dict:
+    def simulate_race(self, strategy: Optional[Dict[int, List[PitStop]]] = None, skip_init: bool = False) -> Dict:
         """
         Simulate complete race.
 
         Args:
             strategy: Dict mapping car_id to list of pit stops
+            skip_init: If True, skip car initialization (useful for pre-configured cars)
 
         Returns:
             Dict with final positions, times, and lap history
@@ -464,8 +467,9 @@ class RaceSimulator:
         if strategy is None:
             strategy = {}
 
-        # Initialize
-        self.initialize_cars()
+        # Initialize (unless skipped)
+        if not skip_init:
+            self.initialize_cars()
 
         # Reset caution state
         self.caution_active = False

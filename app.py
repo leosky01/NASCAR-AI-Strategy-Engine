@@ -634,13 +634,12 @@ with tab4:
 
         st.info("💡 Configure your car (Car #0). All other cars use auto-generated settings.")
 
-        # Starting grid position (simplified)
-        # Note: This doesn't force the position, just shows where you qualified
+        # Starting grid position
         starting_grid = st.selectbox(
-            "Starting Grid",
+            "Starting Grid Qualifying Position",
             ["Front Row (P1-P5)", "Mid-Pack (P15-P25)", "Back Row (P35-P40)"],
             index=0,
-            help="This shows which part of the grid you qualified in - affects race experience"
+            help="⚠️ Note: Due to traffic dynamics, actual starting position may vary. This sets your car's approximate performance level."
         )
 
         # Quick strategy config
@@ -678,12 +677,30 @@ with tab4:
         strategy = custom_strategy if custom_strategy else PRESET_STRATEGIES[race_strategy_name]
 
         st.write(f"Simulating race with {strategy.name} strategy...")
-        st.info(f"🚦 Grid: {starting_grid} | Strategy: {strategy.name}")
+        st.info(f"🚦 Strategy: {strategy.name}")
 
         # Run simulation
         with st.spinner("Simulating..."):
-            # Create simulator
-            sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
+            # Create simulator with fixed seed for reproducibility
+            sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps, random_seed=42)
+            sim.initialize_cars()
+
+            # Adjust car #0's performance to match requested grid
+            # Find the car at the target position and copy all their physics
+            target_positions = {
+                "Front Row (P1-P5)": 3,
+                "Mid-Pack (P15-P25)": 20,
+                "Back Row (P35-P40)": 38
+            }
+
+            target_pos = target_positions[starting_grid]
+
+            # Sort cars by base_lap_time to find approximate target
+            all_cars_by_time = sorted(enumerate(sim.cars), key=lambda x: x[1].physics.base_lap_time)
+            target_car_idx = all_cars_by_time[target_pos - 1][0]
+
+            # Copy ALL physics from target car
+            sim.cars[0].physics = sim.cars[target_car_idx].physics
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
@@ -691,8 +708,8 @@ with tab4:
                 0: strategy.pit_stops
             }
 
-            # Simulate the race
-            result = sim.simulate_race(strategy=our_car_strategy)
+            # Simulate the race (skip initialization since we've already set up car physics)
+            result = sim.simulate_race(strategy=our_car_strategy, skip_init=True)
 
             # Determine actual starting position and grid
             actual_starting_pos = result['lap_history'][0]['positions'][0]
@@ -706,9 +723,9 @@ with tab4:
                 actual_grid = "Back Row (P35-P40)"
 
             # Show what actually happened
-            grid_display = f"Qualified: {actual_grid}"
+            grid_display = f"{actual_grid}"
             if actual_grid != starting_grid:
-                grid_display += f" (Requested: {starting_grid})"
+                grid_display += f" (Target: {starting_grid})"
 
         # Display results
         st.success("✅ Simulation Complete!")
@@ -723,7 +740,10 @@ with tab4:
 
         # Add explanation if grid doesn't match request
         if actual_grid != starting_grid:
-            st.caption("💡 Note: Starting position depends on car performance. Your strategy and racing luck determine where you qualify!")
+            st.caption("💡 Note: Actual starting position may differ from qualifying target due to:")
+            st.caption("   • Traffic dynamics on lap 1 (cars ahead get clean air)")
+            st.caption("   • Random variation in lap times even with identical physics")
+            st.caption("   • Overtaking ability differences between cars")
 
         # Show positions gained/lost
         if positions_gained > 0:
