@@ -684,28 +684,36 @@ with tab4:
         sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
 
         with st.spinner("Simulating..."):
-            # Simple approach: Adjust car #0's base lap time to match starting position
+            # First, initialize to discover car physics (base lap times)
             sim.initialize_cars()
 
             # Get all cars' base lap times and sort
             all_base_times = [(i, car.physics.base_lap_time) for i, car in enumerate(sim.cars)]
             all_base_times.sort(key=lambda x: x[1])  # Sort by time
 
-            # Set car #0 to the base time that corresponds to desired starting position
+            # Find the physics that correspond to desired starting position
             # Position 1 = fastest, Position 40 = slowest
             if 1 <= starting_position <= len(all_base_times):
                 target_car_idx, target_time = all_base_times[starting_position - 1]
-                # Also copy other physics attributes for better match
-                sim.cars[0].physics = sim.cars[target_car_idx].physics
+                target_physics = sim.cars[target_car_idx].physics
             else:
                 st.warning(f"Invalid starting position. Using position 1.")
+                target_physics = sim.cars[0].physics
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
-            # Use the strategy's pit stops directly (they're already PitStop objects)
             our_car_strategy = {
                 0: strategy.pit_stops
             }
+
+            # simulate_race() calls initialize_cars() internally, so we
+            # monkey-patch to re-apply our physics swap right after init
+            original_init = sim.initialize_cars
+            def patched_init():
+                original_init()
+                sim.cars[0].physics = target_physics
+            sim.initialize_cars = patched_init
+
             result = sim.simulate_race(strategy=our_car_strategy)
 
         # Display results
