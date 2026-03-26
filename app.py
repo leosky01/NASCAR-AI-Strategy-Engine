@@ -636,11 +636,11 @@ with tab4:
 
         # Starting position
         starting_position = st.slider(
-            "Starting Position",
+            "Approximate Starting Position",
             min_value=1,
             max_value=num_cars,
             value=1,
-            help="Your starting position (1 = pole position)"
+            help="Starting position affects car performance. Actual first-lap position may vary due to race conditions."
         )
 
         # Quick strategy config
@@ -684,21 +684,21 @@ with tab4:
         sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
 
         with st.spinner("Simulating..."):
-            # Set starting position by adjusting base lap times
-            # Initialize cars first to get the distribution
+            # Simple approach: Adjust car #0's base lap time to match starting position
             sim.initialize_cars()
 
-            # Get all base lap times and sort them
-            base_times = [car.physics.base_lap_time for car in sim.cars]
-            base_times.sort()
+            # Get all cars' base lap times and sort
+            all_base_times = [(i, car.physics.base_lap_time) for i, car in enumerate(sim.cars)]
+            all_base_times.sort(key=lambda x: x[1])  # Sort by time
 
-            # Set our car's base lap time to match desired starting position
+            # Set car #0 to the base time that corresponds to desired starting position
             # Position 1 = fastest, Position 40 = slowest
-            if 1 <= starting_position <= len(base_times):
-                sim.cars[0].physics.base_lap_time = base_times[starting_position - 1]
+            if 1 <= starting_position <= len(all_base_times):
+                target_car_idx, target_time = all_base_times[starting_position - 1]
+                # Also copy other physics attributes for better match
+                sim.cars[0].physics = sim.cars[target_car_idx].physics
             else:
                 st.warning(f"Invalid starting position. Using position 1.")
-                sim.cars[0].physics.base_lap_time = base_times[0]
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
@@ -711,16 +711,17 @@ with tab4:
         # Display results
         st.success("✅ Simulation Complete!")
 
-        # Key results
+        # Calculate actual starting position (after lap 1)
+        actual_starting_pos = result['lap_history'][0]['positions'][0]
         our_finish = result['final_positions'][0]
-        positions_gained = starting_position - our_finish
+        positions_gained = actual_starting_pos - our_finish
 
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.metric("Starting Position", f"P{starting_position}")
-        with col_b:
-            st.metric("Finishing Position", f"P{our_finish}",
-                     f"{'↑ Gained ' + str(positions_gained) if positions_gained > 0 else '↓ Lost ' + str(abs(positions_gained)) if positions_gained < 0 else '—'}")
+        # Show starting position info
+        if abs(actual_starting_pos - starting_position) <= 2:
+            st.info(f"🚦 Started: P{actual_starting_pos} | Requested: P{starting_position} | Finishing: P{our_finish}")
+        else:
+            st.warning(f"🚦 Started: P{actual_starting_pos} (Requested: P{starting_position}) | Finishing: P{our_finish}")
+            st.caption("💡 Note: Actual starting position may differ due to race conditions (fuel, tires, traffic)")
 
         # Winner
         winner = result['winner']
