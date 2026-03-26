@@ -83,7 +83,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Strategy Comparison",
     "🔍 Sensitivity Analysis",
     "🎯 Strategy Optimizer",
-    "🏁 Live Simulation",
+    "🏁 Race Replay",
     "⚡ Live Decisions"
 ])
 
@@ -612,11 +612,20 @@ with tab3:
             st.dataframe(df_metrics, use_container_width=True)
 
 # ============================================================================
-# TAB 4: Live Simulation
+# TAB 4: Race Replay
 # ============================================================================
 with tab4:
-    st.header("Live Race Simulation")
-    st.write("Simulate a single race and see detailed results")
+    st.header("🏁 Race Replay")
+    st.write("Watch how a strategy plays out lap-by-lap")
+
+    st.info("""
+    📌 **Purpose:** See your strategy in action! This simulates a single race and shows:
+    - Lap-by-lap position changes (when you gain/lose positions)
+    - The impact of pit timing on race dynamics
+    - How your strategy performs under real race conditions
+
+    💡 **Perfect for:** Understanding strategy dynamics before race day
+    """)
 
     col1, col2 = st.columns([2, 1])
 
@@ -663,18 +672,18 @@ with tab4:
 
     with col2:
         st.subheader("Controls")
-        run_simulation = st.button("🏁 Start Race", type="primary")
+        run_simulation = st.button("▶️ Simulate Race", type="primary")
 
     if run_simulation:
         strategy = custom_strategy if custom_strategy else PRESET_STRATEGIES[race_strategy_name]
 
         st.write(f"Simulating race with {strategy.name} strategy...")
-        st.info(f"ℹ️ Starting position: {starting_position} | Your car: Car #0")
+        st.info(f"🚦 Starting: P{starting_position} | Strategy: {strategy.name}")
 
         # Run simulation
         sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
 
-        with st.spinner("Racing..."):
+        with st.spinner("Simulating..."):
             # Set starting position by adjusting base lap times
             # Initialize cars first to get the distribution
             sim.initialize_cars()
@@ -700,17 +709,28 @@ with tab4:
             result = sim.simulate_race(strategy=our_car_strategy)
 
         # Display results
-        st.success("🏁 Race Complete!")
+        st.success("✅ Simulation Complete!")
 
-        # Starting position info
-        st.info(f"📍 Starting Position: {starting_position} | Finishing Position: {result['final_positions'][0]}")
+        # Key results
+        our_finish = result['final_positions'][0]
+        positions_gained = starting_position - our_finish
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("Starting Position", f"P{starting_position}")
+        with col_b:
+            st.metric("Finishing Position", f"P{our_finish}",
+                     f"{'↑ Gained ' + str(positions_gained) if positions_gained > 0 else '↓ Lost ' + str(abs(positions_gained)) if positions_gained < 0 else '—'}")
 
         # Winner
         winner = result['winner']
-        st.subheader(f"🏆 Winner: Car #{winner}")
+        if winner == 0:
+            st.success(f"🏆 Your Car (#0) Won!")
+        else:
+            st.info(f"🏆 Winner: Car #{winner}")
 
         # Final positions
-        st.subheader("Final Positions")
+        st.subheader("📊 Final Standings")
 
         # Create positions table
         positions_data = []
@@ -748,7 +768,7 @@ with tab4:
             x='Lap',
             y='Position',
             color='Car',
-            title='Position History by Lap (Top 10 Cars)',
+            title='Position Changes Throughout Race (Top 10)',
             markers=False,
             height=500
         )
