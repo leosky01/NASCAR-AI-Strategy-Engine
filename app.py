@@ -634,13 +634,13 @@ with tab4:
 
         st.info("💡 Configure your car (Car #0). All other cars use auto-generated settings.")
 
-        # Starting position
-        starting_position = st.slider(
-            "Approximate Starting Position",
-            min_value=1,
-            max_value=num_cars,
-            value=1,
-            help="Starting position affects car performance. Actual first-lap position may vary due to race conditions."
+        # Starting grid position (simplified)
+        # Note: This doesn't force the position, just shows where you qualified
+        starting_grid = st.selectbox(
+            "Starting Grid",
+            ["Front Row (P1-P5)", "Mid-Pack (P15-P25)", "Back Row (P35-P40)"],
+            index=0,
+            help="This shows which part of the grid you qualified in - affects race experience"
         )
 
         # Quick strategy config
@@ -678,26 +678,12 @@ with tab4:
         strategy = custom_strategy if custom_strategy else PRESET_STRATEGIES[race_strategy_name]
 
         st.write(f"Simulating race with {strategy.name} strategy...")
-        st.info(f"🚦 Starting: P{starting_position} | Strategy: {strategy.name}")
+        st.info(f"🚦 Grid: {starting_grid} | Strategy: {strategy.name}")
 
         # Run simulation
-        sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
-
         with st.spinner("Simulating..."):
-            # First, initialize to discover car physics (base lap times)
-            sim.initialize_cars()
-
-            # Save all physics and sort by base lap time to find target position
-            all_physics = [car.physics for car in sim.cars]
-            all_base_times = [(i, car.physics.base_lap_time) for i, car in enumerate(sim.cars)]
-            all_base_times.sort(key=lambda x: x[1])  # Sort by time (P1=fastest)
-
-            # Swap car #0's physics with the car at the desired starting position
-            if 1 <= starting_position <= len(all_base_times):
-                target_car_idx = all_base_times[starting_position - 1][0]
-                all_physics[0], all_physics[target_car_idx] = all_physics[target_car_idx], all_physics[0]
-            else:
-                st.warning(f"Invalid starting position. Using position 1.")
+            # Create simulator
+            sim = RaceSimulator(num_cars=num_cars, num_laps=num_laps)
 
             # Apply the selected strategy to car #0 (your car)
             # All other cars will use auto-generated default strategies
@@ -705,29 +691,47 @@ with tab4:
                 0: strategy.pit_stops
             }
 
-            # simulate_race() calls initialize_cars() internally, so we
-            # patch it to reuse the same physics (with the swap applied)
-            original_init = sim.initialize_cars
-            def patched_init():
-                original_init(car_physics=all_physics)
-            sim.initialize_cars = patched_init
-
+            # Simulate the race
             result = sim.simulate_race(strategy=our_car_strategy)
+
+            # Determine actual starting position and grid
+            actual_starting_pos = result['lap_history'][0]['positions'][0]
+
+            # Determine which grid this actually is
+            if actual_starting_pos <= 5:
+                actual_grid = "Front Row (P1-P5)"
+            elif actual_starting_pos <= 25:
+                actual_grid = "Mid-Pack (P15-P25)"
+            else:
+                actual_grid = "Back Row (P35-P40)"
+
+            # Show what actually happened
+            grid_display = f"Qualified: {actual_grid}"
+            if actual_grid != starting_grid:
+                grid_display += f" (Requested: {starting_grid})"
 
         # Display results
         st.success("✅ Simulation Complete!")
 
-        # Calculate actual starting position (after lap 1)
+        # Calculate actual starting position and finishing position
         actual_starting_pos = result['lap_history'][0]['positions'][0]
         our_finish = result['final_positions'][0]
         positions_gained = actual_starting_pos - our_finish
 
-        # Show starting position info
-        if abs(actual_starting_pos - starting_position) <= 2:
-            st.info(f"🚦 Started: P{actual_starting_pos} | Requested: P{starting_position} | Finishing: P{our_finish}")
+        # Show grid and results
+        st.metric("Starting Position", f"P{actual_starting_pos}", delta=f"{grid_display}")
+
+        # Add explanation if grid doesn't match request
+        if actual_grid != starting_grid:
+            st.caption("💡 Note: Starting position depends on car performance. Your strategy and racing luck determine where you qualify!")
+
+        # Show positions gained/lost
+        if positions_gained > 0:
+            st.success(f"📈 Gained {positions_gained} positions during race!")
+        elif positions_gained < 0:
+            st.warning(f"📉 Lost {abs(positions_gained)} positions during race")
         else:
-            st.warning(f"🚦 Started: P{actual_starting_pos} (Requested: P{starting_position}) | Finishing: P{our_finish}")
-            st.caption("💡 Note: Actual starting position may differ due to race conditions (fuel, tires, traffic)")
+            st.info("➖ Maintained position throughout race")
 
         # Winner
         winner = result['winner']
