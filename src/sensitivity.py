@@ -134,7 +134,8 @@ class StrategySensitivityAnalyzer:
                            base_strategy: Strategy,
                            pit_index: int,
                            search_range: Tuple[int, int] = (30, 80),
-                           num_sims_per_point: int = 30) -> Dict:
+                           num_sims_per_point: int = 30,
+                           optimization_metric: str = 'mean_position') -> Dict:
         """
         Find optimal pit lap using efficient optimization.
 
@@ -162,7 +163,7 @@ class StrategySensitivityAnalyzer:
         print(f"Original: lap {original_lap}, expected position {original_position:.2f}")
 
         def objective_function(lap):
-            """Objective to minimize (expected finishing position)"""
+            """Objective to minimize (expected finishing position or maximize points)"""
             # Ensure lap is integer
             lap_int = int(round(lap))
 
@@ -184,7 +185,12 @@ class StrategySensitivityAnalyzer:
                 show_progress=False
             )
 
-            return metrics['mean_position']
+            # Return metric to optimize (can be position or points)
+            # For points: negate to maximize (scipy minimizes)
+            if optimization_metric == 'points' and 'expected_total_points' in metrics:
+                return -metrics['expected_total_points']  # Maximize points
+            else:
+                return metrics['mean_position']  # Minimize position
 
         # Optimize
         print("  Optimizing...")
@@ -219,7 +225,8 @@ class StrategySensitivityAnalyzer:
     def optimize_complete_strategy(self,
                                   base_strategy: Strategy,
                                   search_ranges: List[Tuple[int, int]],
-                                  num_sims_per_point: int = 50) -> Strategy:
+                                  num_sims_per_point: int = 50,
+                                  optimization_metric: str = 'mean_position') -> Strategy:
         """
         Optimize all pit stops in a strategy.
 
@@ -247,7 +254,8 @@ class StrategySensitivityAnalyzer:
                 base_strategy,
                 pit_index=i,
                 search_range=search_range,
-                num_sims_per_point=num_sims_per_point
+                num_sims_per_point=num_sims_per_point,
+                optimization_metric=optimization_metric
             )
 
             optimized_pits.append(PitStop(

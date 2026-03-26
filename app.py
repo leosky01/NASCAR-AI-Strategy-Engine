@@ -11,9 +11,10 @@ import plotly.express as px
 from datetime import datetime
 
 from src.simulator import RaceSimulator
-from src.monte_carlo import MonteCarloEvaluator
+from src.monte_carlo import MonteCarloEvaluator, SimulationResult
 from src.strategy import Strategy, PitStop, PRESET_STRATEGIES
 from src.sensitivity import StrategySensitivityAnalyzer, create_sensitivity_plot
+from src.decision_analyzer import ProbabilisticDecisionEngine, create_decision_summary
 
 # Page configuration
 st.set_page_config(
@@ -78,11 +79,12 @@ evaluator = get_evaluator(sim_config)
 analyzer = get_analyzer(evaluator)
 
 # Main tabs
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Strategy Comparison",
     "🔍 Sensitivity Analysis",
     "🎯 Strategy Optimizer",
-    "🏁 Live Simulation"
+    "🏁 Live Simulation",
+    "⚡ Live Decisions"
 ])
 
 # ============================================================================
@@ -756,6 +758,267 @@ with tab4:
         )
 
         st.plotly_chart(fig, use_container_width=True)
+
+# ============================================================================
+# TAB 5: Live Decisions
+# ============================================================================
+with tab5:
+    st.header("⚡ Live Race Decisions")
+    st.write("Get real-time probabilistic recommendations for pit vs. stay out decisions")
+
+    # Initialize decision engine
+    @st.cache_resource
+    def get_decision_engine():
+        """Get cached decision engine"""
+        return ProbabilisticDecisionEngine(n_bootstrap=1000)
+
+    decision_engine = get_decision_engine()
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.subheader("Current Race Situation")
+
+        # Race state inputs
+        col_a, col_b = st.columns(2)
+        current_lap = col_a.number_input("Current Lap", min_value=1, max_value=200, value=80)
+        current_position = col_b.number_input("Current Position", min_value=1, max_value=43, value=15)
+
+        col_c, col_d = st.columns(2)
+        tire_age = col_c.number_input("Tire Age (laps)", min_value=0, max_value=100, value=40)
+        fuel_level = col_d.slider("Fuel Level (%)", 0, 100, 60)
+
+        # Caution flag
+        caution_active = st.checkbox("🚩 Caution Flag Active", value=False)
+
+        # Decision context
+        st.info("ℹ️ The system will simulate both pitting now and staying out, then provide a probabilistic recommendation.")
+
+    with col2:
+        st.subheader("Analyze Decision")
+        num_sims_per_option = st.slider("Simulations per Option", 50, 200, 100, 10)
+
+        # Quick decision quality
+        decision_quality = st.select_slider(
+            "Analysis Quality",
+            options=['Fast (50 sims)', 'Standard (100 sims)', 'Thorough (200 sims)'],
+            value='Standard (100 sims)'
+        )
+        sims_map = {'Fast (50 sims)': 50, 'Standard (100 sims)': 100, 'Thorough (200 sims)': 200}
+        num_sims_per_option = sims_map[decision_quality]
+
+        run_decision = st.button("🎲 Analyze Decision", type="primary")
+
+    if run_decision or 'decision_result' in st.session_state:
+        st.write("Analyzing decision...")
+
+        with st.spinner("Running Monte Carlo simulations for both options..."):
+            # Create two strategies: pit now vs stay out
+            # Strategy 1: Pit now
+            remaining_laps = num_laps - current_lap
+
+            # Estimate remaining pit stops based on race length
+            if remaining_laps > 100:
+                remaining_pits = [current_lap + 50, current_lap + 100]
+            elif remaining_laps > 50:
+                remaining_pits = [current_lap + 50]
+            else:
+                remaining_pits = []
+
+            pit_now_strategy = Strategy(
+                name="Pit Now",
+                description=f"Pit on lap {current_lap}",
+                pit_stops=[PitStop(lap=current_lap)] + [PitStop(lap=lap) for lap in remaining_pits]
+            )
+
+            # Strategy 2: Stay out (adjust next pit)
+            # Find next scheduled pit and delay it
+            next_pit_lap = current_lap + 30 if remaining_laps > 30 else current_lap + 15
+            if remaining_laps > 100:
+                stay_out_pits = [next_pit_lap, current_lap + 100]
+            elif remaining_laps > 50:
+                stay_out_pits = [next_pit_lap]
+            else:
+                stay_out_pits = []
+
+            stay_out_strategy = Strategy(
+                name="Stay Out",
+                description=f"Stay out on lap {current_lap}",
+                pit_stops=[PitStop(lap=lap) for lap in stay_out_pits]
+            )
+
+            # Evaluate both strategies
+            pit_metrics = evaluator.evaluate_strategy(
+                pit_now_strategy,
+                num_simulations=num_sims_per_option,
+                show_progress=False
+            )
+
+            stay_out_metrics = evaluator.evaluate_strategy(
+                stay_out_strategy,
+                num_simulations=num_sims_per_option,
+                show_progress=False
+            )
+
+            # Analyze decision probabilistically
+            decision = decision_engine.analyze_pit_decision(
+                pit_metrics,
+                stay_out_metrics,
+                decision_context={
+                    'lap': current_lap,
+                    'position': current_position,
+                    'tire_age': tire_age,
+                    'fuel_level': fuel_level,
+                    'caution': caution_active
+                }
+            )
+
+            # Store in session state
+            st.session_state['decision_result'] = (decision, pit_metrics, stay_out_metrics)
+            st.session_state['decision_context'] = {
+                'lap': current_lap,
+                'position': current_position,
+                'tire_age': tire_age,
+                'fuel_level': fuel_level
+            }
+
+    if 'decision_result' in st.session_state:
+        decision, pit_metrics, stay_out_metrics = st.session_state['decision_result']
+        context = st.session_state.get('decision_context', {})
+
+        # Display recommendation prominently
+        st.subheader("🎯 Recommendation")
+
+        # Color-code recommendation
+        rec_color = {
+            'pit': '🟢',
+            'stay_out': '🔴',
+            'toss_up': '🟡'
+        }
+
+        st.markdown(f"### {rec_color.get(decision.recommendation, '⚪')} {decision.recommendation.replace('_', ' ').upper()}")
+        st.write(f"**Probability:** {decision.probability * 100:.1f}% confidence that {decision.recommendation.replace('_', ' ')} is better")
+        st.write(f"**Confidence Level:** {decision.confidence.upper()} ({decision.sample_size} total simulations)")
+
+        # Detailed comparison
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader("If You Pit 🏁")
+            st.metric("Expected Position", f"{pit_metrics['mean_position']:.1f}")
+            st.metric("Top-10 Probability", f"{pit_metrics['top10_rate']:.1%}")
+            st.metric("Win Probability", f"{pit_metrics['win_rate']:.1%}")
+            st.metric("Std Deviation", f"±{pit_metrics['std_position']:.1f}")
+
+        with col2:
+            st.subheader("If You Stay Out 🔵")
+            st.metric("Expected Position", f"{stay_out_metrics['mean_position']:.1f}")
+            st.metric("Top-10 Probability", f"{stay_out_metrics['top10_rate']:.1%}")
+            st.metric("Win Probability", f"{stay_out_metrics['win_rate']:.1%}")
+            st.metric("Std Deviation", f"±{stay_out_metrics['std_position']:.1f}")
+
+        # Expected improvement
+        st.subheader("📊 Expected Impact")
+
+        improvement = stay_out_metrics['mean_position'] - pit_metrics['mean_position']
+        if improvement > 0:
+            st.success(f"✅ Pitting improves expected finishing position by **{improvement:.1f} positions**")
+        elif improvement < 0:
+            st.warning(f"⚠️ Staying out improves expected finishing position by **{abs(improvement):.1f} positions**")
+        else:
+            st.info("ℹ️ Both strategies have similar expected outcomes")
+
+        # Position distributions
+        st.subheader("📈 Position Distribution Comparison")
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Histogram(
+            name='Pit Now',
+            x=pit_metrics['positions'],
+            opacity=0.6,
+            marker_color='green',
+            nbinsx=20
+        ))
+
+        fig.add_trace(go.Histogram(
+            name='Stay Out',
+            x=stay_out_metrics['positions'],
+            opacity=0.6,
+            marker_color='blue',
+            nbinsx=20
+        ))
+
+        fig.update_layout(
+            title="Distribution of Finishing Positions",
+            xaxis_title="Finishing Position",
+            xaxis=dict(autorange="reversed"),
+            yaxis_title="Frequency",
+            barmode='overlay',
+            height=400
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Risk assessment
+        st.subheader("⚠️ Risk Assessment")
+
+        pit_p95 = np.percentile(pit_metrics['positions'], 95)
+        stay_out_p95 = np.percentile(stay_out_metrics['positions'], 95)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Pitting - Worst 5%",
+                f"P{pit_p95:.0f}",
+                help="95th percentile (worst case scenario)"
+            )
+
+        with col2:
+            st.metric(
+                "Staying Out - Worst 5%",
+                f"P{stay_out_p95:.0f}",
+                help="95th percentile (worst case scenario)"
+            )
+
+        with col3:
+            if pit_p95 < stay_out_p95:
+                st.metric("Lower Risk", "Pitting", "Better worst case")
+            else:
+                st.metric("Lower Risk", "Staying Out", "Better worst case")
+
+        # Effect size interpretation
+        st.subheader("📏 Statistical Significance")
+
+        effect_magnitude = abs(decision.effect_size)
+        if effect_magnitude < 0.2:
+            effect_interp = "Negligible"
+        elif effect_magnitude < 0.5:
+            effect_interp = "Small"
+        elif effect_magnitude < 0.8:
+            effect_interp = "Medium"
+        else:
+            effect_interp = "Large"
+
+        st.write(f"**Effect Size (Cohen's d):** {decision.effect_size:.2f} - {effect_interp} effect")
+
+        if decision.probability >= 0.7 or decision.probability <= 0.3:
+            st.success("✅ **Clear Choice** - Strong evidence supports the recommendation")
+        elif decision.probability >= 0.6 or decision.probability <= 0.4:
+            st.info("ℹ️ **Moderate Preference** - Slight advantage to recommended option")
+        else:
+            st.warning("⚠️ **Close Call** - Consider other factors like driver preference, track conditions, etc.")
+
+        # Context summary
+        st.subheader("📝 Decision Context")
+        context_df = pd.DataFrame([{
+            'Lap': context.get('lap', '-'),
+            'Position': context.get('position', '-'),
+            'Tire Age': f"{context.get('tire_age', '-')} laps",
+            'Fuel Level': f"{context.get('fuel_level', '-')}%"
+        }])
+        st.dataframe(context_df, use_container_width=True, hide_index=True)
 
 # ============================================================================
 # Footer

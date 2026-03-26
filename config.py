@@ -101,9 +101,32 @@ class ValidationConfig:
     max_tire_life: int = 70  # laps
 
 
+@dataclass
+class PointsConfig:
+    """NASCAR stage points configuration"""
+    stage1_lap: int = 60
+    stage2_lap: int = 120
+    stage_points: tuple = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)  # Top 10 positions
+    winner_points: int = 40
+    second_place_points: int = 35
+    third_place_points: int = 34
+
+
+@dataclass
+class TireModelConfig:
+    """GAM tire model configuration"""
+    use_gam_model: bool = False
+    default_track: str = 'Charlotte'
+    available_tracks: tuple = ('Phoenix', 'Charlotte', 'Darlington', 'Bristol', 'Talladega')
+    use_synthetic_data: bool = True
+    synthetic_samples_per_track: int = 1000
+
+
 # Default configurations
 DEFAULT_SIM_CONFIG = SimulatorConfig()
 DEFAULT_MODEL_CONFIG = ModelConfig()
 DEFAULT_MC_CONFIG = MonteCarloConfig()
 DEFAULT_SENSITIVITY_CONFIG = SensitivityConfig()
 DEFAULT_VALIDATION_CONFIG = ValidationConfig()
+DEFAULT_POINTS_CONFIG = PointsConfig()
+DEFAULT_TIRE_MODEL_CONFIG = TireModelConfig()

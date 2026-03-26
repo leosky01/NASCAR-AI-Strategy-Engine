@@ -6,6 +6,7 @@ scipy>=1.7.0,<2.0.0
 # Machine Learning
 xgboost>=1.5.0,<3.0.0
 scikit-learn>=1.0.0,<2.0.0
+pygam>=0.8.0  # Optional: for GAM tire models (graceful fallback if missing)
 
 # Visualization
 plotly>=5.0.0,<6.0.0

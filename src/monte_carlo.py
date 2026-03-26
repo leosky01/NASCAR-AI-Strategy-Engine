@@ -28,6 +28,8 @@ class SimulationResult:
     lap_times: List[float]  # Lap times for our car
     positions_over_time: List[int]  # Position each lap
     num_cautions: int  # Total cautions in race
+    stage1_position: Optional[int] = None  # Position at end of stage 1
+    stage2_position: Optional[int] = None  # Position at end of stage 2
 
 
 def run_single_simulation(sim_config: Dict,
@@ -87,13 +89,24 @@ def run_single_simulation(sim_config: Dict,
     num_cautions = sum(1 for lap_data in result['lap_history']
                       if lap_data.get('caution_active', False))
 
+    # Extract stage positions if available
+    stage1_position = None
+    stage2_position = None
+    if 'stage_positions' in result:
+        if 1 in result['stage_positions'] and our_car_index in result['stage_positions'][1]:
+            stage1_position = result['stage_positions'][1][our_car_index]
+        if 2 in result['stage_positions'] and our_car_index in result['stage_positions'][2]:
+            stage2_position = result['stage_positions'][2][our_car_index]
+
     return SimulationResult(
         position=our_position,
         time=our_time,
         winner=is_winner,
         lap_times=lap_times,
         positions_over_time=positions_over_time,
-        num_cautions=num_cautions
+        num_cautions=num_cautions,
+        stage1_position=stage1_position,
+        stage2_position=stage2_position
     )
 
 
@@ -177,6 +190,28 @@ class MonteCarloEvaluator:
             'position_histories': position_histories,  # For visualization
             'num_simulations': num_simulations
         }
+
+        # Add probability distribution metrics
+        metrics['position_distribution'] = {
+            'percentiles': {p: np.percentile(positions, p) for p in [5, 10, 25, 50, 75, 90, 95]},
+            'probability_top10': np.mean([p <= 10 for p in positions]),
+            'probability_top5': np.mean([p <= 5 for p in positions]),
+            'probability_win': np.mean([p == 1 for p in positions]),
+            'probability_podium': np.mean([p <= 3 for p in positions])
+        }
+
+        # Calculate expected points if stage positions are available
+        stage1_positions = [r.stage1_position for r in results if r.stage1_position is not None]
+        stage2_positions = [r.stage2_position for r in results if r.stage2_position is not None]
+
+        if stage1_positions or stage2_positions:
+            from src.nascar_points import calculate_expected_points
+            points_metrics = calculate_expected_points(
+                stage1_positions=stage1_positions,
+                stage2_positions=stage2_positions,
+                final_positions=positions
+            )
+            metrics.update(points_metrics)
 
         return metrics
 

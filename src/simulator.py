@@ -27,6 +27,8 @@ class CarPhysics:
     fuel_weight_penalty: float = 0.03  # seconds per % fuel
     overtaking_ability: float = 1.0  # multiplier for traffic effect (higher = better)
     consistency: float = 1.0  # noise multiplier (lower = more consistent)
+    use_gam_model: bool = False  # Use GAM tire model if available
+    track_name: str = 'Charlotte'  # For GAM tire model lookup
 
 
 @dataclass
@@ -45,30 +47,38 @@ class CarState:
     current_lap_time: float = 0.0
     position: int = 1
 
-    def get_tire_penalty(self) -> float:
+    def get_tire_penalty(self, tire_model_manager=None, traffic_density=0.0) -> float:
         """
         Calculate lap time penalty from tire degradation.
 
-        Uses exponential curve: degradation accelerates as tires age.
-        New tires (age=0) have no penalty.
-        Old tires (age=50+) have significant penalty.
+        Uses GAM model if available and enabled, otherwise falls back to
+        exponential curve: degradation accelerates as tires age.
 
-        The penalty is capped at a realistic maximum (5 seconds) to prevent
-        unrealistic lap times on extremely old tires.
+        Args:
+            tire_model_manager: Optional TireModelManager for GAM predictions
+            traffic_density: Current traffic density (0-1) for GAM model
 
         Returns:
             Lap time penalty in seconds
         """
-        # Exponential degradation factor
+        # Use GAM if available and enabled
+        if (tire_model_manager and
+            self.physics.use_gam_model and
+            hasattr(tire_model_manager, 'predict_tire_penalty')):
+            from src.tire_model import TireModelManager
+            if isinstance(tire_model_manager, TireModelManager):
+                result = tire_model_manager.predict_tire_penalty(
+                    track_name=self.physics.track_name,
+                    tire_age=self.tire_age,
+                    traffic_density=traffic_density,
+                    overtaking_ability=self.physics.overtaking_ability
+                )
+                return min(result.predicted_penalty, 5.0)
+
+        # Fallback to exponential model (backward compatible)
         degradation_factor = 1 - np.exp(-self.tire_age / 20.0)
-
-        # Base penalty grows with age
         base_penalty = self.physics.tire_degradation_rate * self.tire_age
-
-        # Total penalty increases with age (acceleration)
         penalty = base_penalty * (1 + degradation_factor)
-
-        # Cap at realistic maximum (tires can't make you 10+ seconds slower)
         return min(penalty, 5.0)
 
     def get_fuel_penalty(self) -> float:
@@ -136,6 +146,54 @@ class RaceSimulator:
         self.green_flag_run_length = 0  # Laps since last caution
         self.lap_history: List[Dict] = []
 
+        # Stage tracking (for NASCAR stage racing)
+        # Default stages: laps 60 and 120 for a 200 lap race
+        self.stage_laps = [max(1, num_laps // 3), max(1, 2 * num_laps // 3)]
+        self.stage_positions: Dict[int, Dict[int, int]] = {}  # {stage_num: {car_id: position}}
+
+        # Tire model manager (optional, for GAM-based tire degradation)
+        self.tire_model_manager = None
+
+    def set_tire_model_manager(self, tire_model_manager):
+        """
+        Set the tire model manager for GAM-based tire degradation.
+
+        Args:
+            tire_model_manager: TireModelManager instance
+        """
+        self.tire_model_manager = tire_model_manager
+
+    def _calculate_traffic_density(self, car: CarState, sorted_times: List[Tuple[int, float]]) -> float:
+        """
+        Calculate traffic density (0-1) for a car.
+
+        Based on how many cars are close ahead.
+
+        Args:
+            car: Car state
+            sorted_times: List of (car_id, cumulative_time) sorted by time
+
+        Returns:
+            Traffic density from 0 (none) to 1 (heavy)
+        """
+        # Find our position
+        our_idx = next((i for i, (car_id, _) in enumerate(sorted_times) if car_id == car.car_id), None)
+
+        if our_idx is None or our_idx == 0:
+            return 0.0  # Leader has no traffic
+
+        # Count cars within 1 second ahead
+        cars_within_1s = 0
+        for i in range(max(0, our_idx - 10), our_idx):  # Check up to 10 cars ahead
+            _, ahead_time = sorted_times[i]
+            _, our_time = sorted_times[our_idx]
+            gap = our_time - ahead_time
+            if gap <= 1.0:
+                cars_within_1s += 1
+
+        # Normalize to 0-1 (10 cars within 1s = max density)
+        return min(cars_within_1s / 10.0, 1.0)
+
     def initialize_cars(self, car_physics: Optional[List[CarPhysics]] = None):
         """
         Initialize car states with physics parameters.
@@ -170,7 +228,7 @@ class RaceSimulator:
             for i in range(self.num_cars)
         ]
 
-    def calculate_lap_time(self, car: CarState, traffic_penalty: float = 0.0) -> float:
+    def calculate_lap_time(self, car: CarState, traffic_penalty: float = 0.0, traffic_density: float = 0.0) -> float:
         """
         Calculate lap time from physical components.
 
@@ -179,6 +237,7 @@ class RaceSimulator:
         Args:
             car: Car state
             traffic_penalty: Time penalty from following slower cars
+            traffic_density: Traffic density (0-1) for GAM tire model
 
         Returns:
             Lap time in seconds
@@ -186,7 +245,7 @@ class RaceSimulator:
         # Sum components
         lap_time = (
             car.physics.base_lap_time +
-            car.get_tire_penalty() +
+            car.get_tire_penalty(self.tire_model_manager, traffic_density) +
             car.get_fuel_penalty() +
             traffic_penalty +
             car.get_noise()
@@ -286,9 +345,16 @@ class RaceSimulator:
                 final_lap_times[car.car_id] = car.current_lap_time
                 # No additional cumulative time added (pit duration already added)
             else:
+                # Calculate traffic density for GAM model
+                traffic_density = self._calculate_traffic_density(car, sorted_times)
+
                 # Regular lap - apply traffic penalty
                 traffic_penalty = self.calculate_traffic_penalty(car, sorted_times)
-                final_time = self.calculate_lap_time(car, traffic_penalty=traffic_penalty)
+                final_time = self.calculate_lap_time(
+                    car,
+                    traffic_penalty=traffic_penalty,
+                    traffic_density=traffic_density
+                )
                 final_lap_times[car.car_id] = final_time
                 car.current_lap_time = final_time
                 car.cumulative_time += final_time
@@ -447,6 +513,14 @@ class RaceSimulator:
             else:
                 self.green_flag_run_length += 1
 
+            # Check for stage end
+            if lap in self.stage_laps:
+                stage_num = self.stage_laps.index(lap) + 1
+                # Record positions at stage end
+                self.stage_positions[stage_num] = {
+                    car.car_id: car.position for car in self.cars
+                }
+
             # Record history
             self.lap_history.append({
                 'lap': lap,
@@ -464,7 +538,8 @@ class RaceSimulator:
             'final_positions': {car.car_id: car.position for car in self.cars},
             'final_times': {car.car_id: car.cumulative_time for car in self.cars},
             'lap_history': self.lap_history,
-            'winner': winner
+            'winner': winner,
+            'stage_positions': self.stage_positions
         }
 
     def validate_simulation(self, result: Dict) -> Dict[str, bool]:

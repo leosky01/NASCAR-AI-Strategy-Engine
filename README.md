@@ -44,6 +44,8 @@
 - 🎯 Find optimal pit timing with sensitivity analysis
 - 🏁 Simulate races with caution flags
 - ⚙️ Customize simulation parameters
+- ⚡ **NEW:** Get probabilistic decision recommendations (e.g., "75% pit, 25% stay out")
+- 🏆 **NEW:** Optimize for NASCAR stage points instead of just finishing position
 
 *No installation required - runs in your browser!*
 
@@ -118,7 +120,9 @@ This project shows that I can approach these problems using analytical methods a
 | Statistical Analysis | Confidence intervals and comparisons |
 | Machine Learning | XGBoost caution predictor |
 | Optimization | Pit window optimization |
-| Code Quality | 83/83 tests passing |
+| Probabilistic Decisions | "75% pit, 25% stay out" recommendations |
+| NASCAR Points System | Stage points optimization |
+| Code Quality | 138/138 tests passing |
 
 ---
 
@@ -171,6 +175,66 @@ The Streamlit dashboard provides an interface to:
 - Visualize results  
 
 (See demo above)
+
+---
+
+## 🆕 Latest Features (2026)
+
+### Probabilistic Decision Engine
+
+Instead of binary "pit or don't pit" recommendations, the engine now provides **probability distributions**:
+
+```
+Recommendation: PIT - 75.3% probability pitting is better
+Confidence: HIGH (200 simulations)
+
+If You Pit              If You Stay Out
+─────────────         ──────────────────
+Expected: 12.1 pos      Expected: 16.7 pos
+Top-10: 68.2%           Top-10: 34.1%
+Win: 18.3%              Win: 8.7%
+```
+
+**Technical Details:**
+- Bootstrap resampling (1,000 iterations) to estimate P(pit < stay_out)
+- Cohen's d for effect size calculation
+- Confidence levels: high/medium/low based on sample size and effect size
+- Real-time analysis: <500ms for 200 simulations
+
+### NASCAR Stage Points Optimization
+
+Now implements the **official NASCAR stage racing points system**:
+
+- **Stage 1 & 2:** Top 10 get points (1st=10, 2nd=9, ..., 10th=1)
+- **Final Stage:** 1st=40, 2nd=35, 3rd=34, ..., 36th=1
+- **Playoff Points:** 1 per win
+
+**Key Feature:** Optimize for **expected total points** instead of just finishing position. This better aligns with NASCAR's championship format.
+
+### GAM Tire Degradation Models
+
+**Track-specific tire models** using Generalized Additive Models (GAMs):
+
+**Two-Stage Approach:**
+1. **Stage 1:** Tire degradation GAM: `s(tire_age) + s(track_temp) + f(compound)`
+2. **Stage 2:** Traffic GAM on residuals: `s(traffic_density) + s(overtaking_ability)`
+
+**Supported Tracks:**
+- Phoenix (high abrasiveness)
+- Charlotte (moderate)
+- Darlington (very high abrasiveness)
+- Bristol (short track, high wear)
+- Talladega (superspeedway, low wear)
+
+**Graceful Fallback:** Automatically uses exponential model when GAM unavailable.
+
+### New Dashboard Tab: ⚡ Live Decisions
+
+Real-time decision analysis for race-day strategy:
+- Enter current race state (lap, position, tire age, fuel)
+- Get immediate probabilistic recommendation
+- See risk assessment (95th percentile worst case)
+- Compare expected outcomes
 
 ---
 
