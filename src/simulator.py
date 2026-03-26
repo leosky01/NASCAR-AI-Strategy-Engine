@@ -251,9 +251,9 @@ class RaceSimulator:
             traffic_penalty
         )
 
-        # Add noise (unless skipped)
+        # Add noise (unless skipped) - use seeded RNG for reproducibility
         if not skip_noise:
-            lap_time += car.get_noise()
+            lap_time += self.rng.normal(0, 0.15 * car.physics.consistency)
 
         # Cautions slow everyone down
         if self.caution_active:
