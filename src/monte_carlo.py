@@ -3,6 +3,8 @@ Monte Carlo strategy evaluation engine.
 
 Runs multiple race simulations in parallel to evaluate strategies
 under uncertainty and variance.
+
+Updated: Support for mid-race simulation with current state parameters.
 """
 import numpy as np
 from typing import Dict, List, Optional, Tuple
