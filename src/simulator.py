@@ -229,6 +229,82 @@ class RaceSimulator:
             for i in range(self.num_cars)
         ]
 
+    def set_mid_race_state(self,
+                          our_car_index: int,
+                          current_lap: int,
+                          our_position: int,
+                          our_tire_age: int,
+                          our_fuel_level: float,
+                          base_lap_time: float = 48.0):
+        """
+        Set mid-race state for all cars based on current race situation.
+
+        This sets up the simulator to start from a specific lap in the race,
+        with realistic states for all cars based on the our car's position.
+
+        Args:
+            our_car_index: Index of our car (usually 0)
+            current_lap: Current lap number (1-indexed)
+            our_position: Our current position (1-indexed)
+            our_tire_age: Age of our tires in laps
+            our_fuel_level: Our fuel level (0-100)
+            base_lap_time: Average lap time for time calculations
+        """
+        # First initialize all cars with standard physics
+        self.initialize_cars()
+
+        # Calculate cumulative times to match the position ordering
+        # Leader has lowest time, last place has highest time
+        position_gaps = np.cumsum([0] + [0.5] * (self.num_cars - 1))  # 0.5 second gaps
+
+        for i, car in enumerate(self.cars):
+            # Position determines cumulative time (0-indexed position)
+            pos_idx = i
+            car.cumulative_time = position_gaps[pos_idx] * base_lap_time
+
+            # Set tire age with some variance based on position
+            # Cars ahead tend to have slightly older tires (pitted earlier)
+            # Cars behind tend to have slightly newer tires
+            base_tire_age = our_tire_age + self.rng.randint(-5, 6)
+            car.tire_age = max(0, min(100, base_tire_age + self.rng.randint(-3, 4)))
+
+            # Set fuel level with variance (cars pit at different times)
+            base_fuel = our_fuel_level + self.rng.randint(-20, 21)
+            car.fuel_level = max(10.0, min(100.0, base_fuel + self.rng.randint(-10, 11)))
+
+        # Sort cars by position so our car is in the correct position
+        # Our car should be at position our_position (1-indexed)
+        # Position 1 = index 0 in sorted list (lowest time)
+        # Position our_position = index our_position - 1
+
+        # Adjust our car's tire age and fuel
+        self.cars[our_car_index].tire_age = our_tire_age
+        self.cars[our_car_index].fuel_level = our_fuel_level
+
+        # Reorder cars to match positions
+        # Our car should be at our_position-1 index when sorted by time
+        cars_by_position = []
+        for i in range(self.num_cars):
+            if i == our_car_index:
+                continue
+            cars_by_position.append(self.cars[i])
+
+        # Insert our car at correct position
+        cars_by_position.insert(our_position - 1, self.cars[our_car_index])
+
+        # Reassign cumulative times to maintain order
+        for i, car in enumerate(cars_by_position):
+            car.cumulative_time = i * 0.5 * base_lap_time
+
+        self.cars = cars_by_position
+
+        # Update car_ids to match new indices
+        for i, car in enumerate(self.cars):
+            car.car_id = i
+
+        # Return the new index of our car (it's now at our_position - 1)
+        return our_position - 1
+
     def calculate_lap_time(self, car: CarState, traffic_penalty: float = 0.0, traffic_density: float = 0.0, skip_noise: bool = False) -> float:
         """
         Calculate lap time from physical components.
@@ -454,13 +530,14 @@ class RaceSimulator:
         # Cap at reasonable maximum
         return min(prob, 0.10)  # Max 10% per lap
 
-    def simulate_race(self, strategy: Optional[Dict[int, List[PitStop]]] = None, skip_init: bool = False) -> Dict:
+    def simulate_race(self, strategy: Optional[Dict[int, List[PitStop]]] = None, skip_init: bool = False, start_lap: int = 1) -> Dict:
         """
-        Simulate complete race.
+        Simulate complete race or remaining laps from a mid-race state.
 
         Args:
             strategy: Dict mapping car_id to list of pit stops
             skip_init: If True, skip car initialization (useful for pre-configured cars)
+            start_lap: Lap to start simulation from (default: 1, for full race simulation)
 
         Returns:
             Dict with final positions, times, and lap history
@@ -471,6 +548,10 @@ class RaceSimulator:
         # Initialize (unless skipped)
         if not skip_init:
             self.initialize_cars()
+            start_lap = 1  # Force start from lap 1 if initializing fresh
+        else:
+            # When skipping init, ensure start_lap is at least 1
+            start_lap = max(1, start_lap)
 
         # Reset caution state
         self.caution_active = False
@@ -486,19 +567,22 @@ class RaceSimulator:
                 # Use provided strategy for this car
                 car_pits = {}
                 for pit in strategy[car_id]:
-                    car_pits[pit.lap] = pit
+                    # Only include pit stops at or after start_lap
+                    if pit.lap >= start_lap:
+                        car_pits[pit.lap] = pit
                 strategy_pits[car_id] = car_pits
             else:
                 # Generate default strategy for this car
                 default_pits = self._generate_default_strategy(car_id)
-                car_pits = {pit.lap: pit for pit in default_pits}
+                car_pits = {pit.lap: pit for pit in default_pits if pit.lap >= start_lap}
                 strategy_pits[car_id] = car_pits
 
-        # Clear history
-        self.lap_history = []
+        # Clear history (or append if continuing)
+        if start_lap == 1:
+            self.lap_history = []
 
         # Simulate each lap
-        for lap in range(1, self.num_laps + 1):
+        for lap in range(start_lap, self.num_laps + 1):
             # Check for caution triggering (only if not already under caution)
             if not self.caution_active:
                 caution_prob = self._calculate_caution_probability(lap)

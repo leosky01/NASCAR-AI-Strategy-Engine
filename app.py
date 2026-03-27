@@ -964,17 +964,27 @@ with tab5:
                 pit_stops=[PitStop(lap=lap) for lap in stay_out_pits]
             )
 
-            # Evaluate both strategies
+            # Prepare mid-race state for realistic simulation
+            mid_race_state = {
+                'current_lap': current_lap,
+                'current_position': current_position,
+                'tire_age': tire_age,
+                'fuel_level': fuel_level
+            }
+
+            # Evaluate both strategies with mid-race state
             pit_metrics = evaluator.evaluate_strategy(
                 pit_now_strategy,
                 num_simulations=num_sims_per_option,
-                show_progress=False
+                show_progress=False,
+                mid_race_state=mid_race_state
             )
 
             stay_out_metrics = evaluator.evaluate_strategy(
                 stay_out_strategy,
                 num_simulations=num_sims_per_option,
-                show_progress=False
+                show_progress=False,
+                mid_race_state=mid_race_state
             )
 
             # Analyze decision probabilistically

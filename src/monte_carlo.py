@@ -35,7 +35,8 @@ class SimulationResult:
 def run_single_simulation(sim_config: Dict,
                          strategy: Strategy,
                          our_car_index: int,
-                         random_seed: int) -> SimulationResult:
+                         random_seed: int,
+                         mid_race_state: Optional[Dict] = None) -> SimulationResult:
     """
     Run a single race simulation with given strategy.
 
@@ -44,6 +45,12 @@ def run_single_simulation(sim_config: Dict,
         strategy: Strategy to apply to our car
         our_car_index: Which car (0-indexed) we're tracking
         random_seed: For reproducibility
+        mid_race_state: Optional dict with mid-race state {
+            'current_lap': int,
+            'current_position': int,
+            'tire_age': int,
+            'fuel_level': float
+        }
 
     Returns:
         SimulationResult with race outcome
@@ -56,6 +63,7 @@ def run_single_simulation(sim_config: Dict,
     )
 
     # Apply track-specific overrides if a track profile is specified
+    base_lap_time = 48.0  # Default
     if 'track_profile' in sim_config:
         from config import TRACK_PROFILES
         track_key = sim_config['track_profile']
@@ -69,10 +77,31 @@ def run_single_simulation(sim_config: Dict,
             simulator.config.max_lap_time = tp.base_lap_time + 7.0
             simulator.track_length = tp.length_miles
             simulator.stage_laps = [tp.stage1_end, tp.stage2_end]
+            base_lap_time = tp.base_lap_time
+
+    # Set mid-race state if provided
+    if mid_race_state:
+        our_car_index = simulator.set_mid_race_state(
+            our_car_index=our_car_index,
+            current_lap=mid_race_state['current_lap'],
+            our_position=mid_race_state['current_position'],
+            our_tire_age=mid_race_state['tire_age'],
+            our_fuel_level=mid_race_state['fuel_level'],
+            base_lap_time=base_lap_time
+        )
 
     # Convert Strategy to simulator's expected format
     # Simulator expects: Dict[car_id, List[PitStop]]
     # We only control our car (car_id = our_car_index)
+    # Adjust pit laps if mid-race: convert from absolute lap to relative lap
+    adjusted_pit_stops = []
+    start_lap = mid_race_state['current_lap'] if mid_race_state else 0
+
+    for pit in strategy.pit_stops:
+        # Only include pit stops that are at or after the current lap
+        if pit.lap >= start_lap:
+            adjusted_pit_stops.append(pit)
+
     sim_strategy = {
         our_car_index: [
             PitStop(
@@ -81,12 +110,17 @@ def run_single_simulation(sim_config: Dict,
                 fuel_added=pit.fuel_added,
                 tires_changed=pit.tires_changed
             )
-            for pit in strategy.pit_stops
+            for pit in adjusted_pit_stops
         ]
     }
 
-    # Run simulation
-    result = simulator.simulate_race(strategy=sim_strategy)
+    # Run simulation (skip_init and set start_lap if mid-race state was set)
+    start_lap = mid_race_state['current_lap'] + 1 if mid_race_state else 1
+    result = simulator.simulate_race(
+        strategy=sim_strategy,
+        skip_init=mid_race_state is not None,
+        start_lap=start_lap
+    )
 
     # Extract our car's results
     our_position = result['final_positions'][our_car_index]
@@ -151,7 +185,8 @@ class MonteCarloEvaluator:
                          num_simulations: int = 200,
                          our_car_index: int = 0,
                          show_progress: bool = True,
-                         random_seed: Optional[int] = None) -> Dict:
+                         random_seed: Optional[int] = None,
+                         mid_race_state: Optional[Dict] = None) -> Dict:
         """
         Evaluate a strategy via Monte Carlo simulation.
 
@@ -161,6 +196,12 @@ class MonteCarloEvaluator:
             our_car_index: Which car we're tracking (default: 0)
             show_progress: Show progress bar
             random_seed: Base seed for reproducibility
+            mid_race_state: Optional dict with mid-race state {
+                'current_lap': int,
+                'current_position': int,
+                'tire_age': int,
+                'fuel_level': float
+            }
 
         Returns:
             Dict with statistics and raw results
@@ -175,7 +216,8 @@ class MonteCarloEvaluator:
                 self.sim_config,
                 strategy,
                 our_car_index,
-                seed
+                seed,
+                mid_race_state
             )
             for seed in tqdm(seeds, desc=f"Simulating {strategy.name}", disable=not show_progress)
         )
