@@ -926,7 +926,7 @@ with tab5:
 
         run_decision = st.button("🎲 Analyze Decision", type="primary")
 
-    if run_decision or 'decision_result' in st.session_state:
+    if run_decision:
         st.write("Analyzing decision...")
 
         with st.spinner("Running Monte Carlo simulations for both options..."):
