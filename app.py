@@ -948,14 +948,23 @@ with tab5:
                 pit_stops=[PitStop(lap=current_lap)] + [PitStop(lap=lap) for lap in remaining_pits]
             )
 
-            # Strategy 2: Stay out (adjust next pit)
-            # Find next scheduled pit and delay it
-            next_pit_lap = current_lap + 30 if remaining_laps > 30 else current_lap + 15
-            if remaining_laps > 100:
-                stay_out_pits = [next_pit_lap, current_lap + 100]
+            # Strategy 2: Stay out - smarter logic
+            # If tires are fresh (age < 15) and remaining laps are manageable,
+            # stay out until the end. Otherwise, plan one more pit.
+            # Assuming tires can last ~100 laps before significant degradation
+            max_tire_life = 100  # Maximum competitive tire life in laps
+
+            if tire_age + remaining_laps <= max_tire_life:
+                # Tires can make it to the end - no more pits needed
+                stay_out_pits = []
             elif remaining_laps > 50:
+                # Need one more pit, schedule it strategically
+                # Pit when tires would be ~80 laps old
+                laps_until_old_tires = max_tire_life - tire_age
+                next_pit_lap = current_lap + laps_until_old_tires
                 stay_out_pits = [next_pit_lap]
             else:
+                # Short remaining distance, might as well stay out
                 stay_out_pits = []
 
             stay_out_strategy = Strategy(

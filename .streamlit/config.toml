@@ -6,11 +6,11 @@ textColor="#262730"
 font="sans serif"
 
 [client]
-showErrorDetails = false
+showErrorDetails = true
 maxUploadSize = 200
 
 [logger]
-level = "info"
+level = "debug"
 
 [server]
 maxUploadSize = 200
