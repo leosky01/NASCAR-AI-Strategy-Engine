@@ -394,12 +394,32 @@ class RaceSimulator:
             car_pits = strategy_pits.get(car.car_id, {})
             if lap in car_pits:
                 pit = car_pits[lap]
-                car.cumulative_time += pit.duration
+
+                # Base pit duration
+                pit_time = pit.duration
+
+                # Extra penalty for unnecessary pits (wasting fresh tires and/or full fuel)
+                # This simulates the strategic disadvantage of pitting when not needed
+                unnecessary_tire_penalty = 0.0
+                unnecessary_fuel_penalty = 0.0
+
+                if pit.tires_changed and car.tire_age < 15:
+                    # Changing tires that are still fresh - wasteful
+                    unnecessary_tire_penalty = 3.0  # 3 seconds penalty
+
+                if car.fuel_level > 70:
+                    # Pitting with lots of fuel - wasteful
+                    unnecessary_fuel_penalty = 2.0  # 2 seconds penalty
+
+                # Add unnecessary pit penalties
+                pit_time += unnecessary_tire_penalty + unnecessary_fuel_penalty
+
+                car.cumulative_time += pit_time
                 if pit.tires_changed:
                     car.tire_age = 0
                 car.fuel_level = min(100.0, car.fuel_level + pit.fuel_added)
                 # Record pit duration as the lap time (for accurate statistics)
-                tentative_lap_times[car.car_id] = pit.duration
+                tentative_lap_times[car.car_id] = pit_time
             else:
                 # Calculate tentative lap time (without traffic)
                 # Skip noise on first lap for deterministic starting positions

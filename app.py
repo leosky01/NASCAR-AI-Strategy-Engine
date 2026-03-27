@@ -949,23 +949,40 @@ with tab5:
             )
 
             # Strategy 2: Stay out - smarter logic
-            # If tires are fresh (age < 15) and remaining laps are manageable,
-            # stay out until the end. Otherwise, plan one more pit.
-            # Assuming tires can last ~100 laps before significant degradation
-            max_tire_life = 100  # Maximum competitive tire life in laps
+            # Consider tire life, fuel level, and race remaining
+            # Modern NASCAR tires can last 80-100+ laps depending on track
+            # Charlotte is intermediate, so we use a conservative estimate
+            max_tire_life = 120  # Maximum competitive tire life in laps (increased from 100)
 
-            if tire_age + remaining_laps <= max_tire_life:
-                # Tires can make it to the end - no more pits needed
+            # Calculate if we need to pit based on multiple factors
+            need_fuel = fuel_level < 70  # Need fuel if below 70%
+            tires_will_be_old = (tire_age + remaining_laps) > max_tire_life
+            short_race = remaining_laps < 50  # Short remaining distance
+
+            # Decision logic for Stay Out strategy
+            if not need_fuel and not tires_will_be_old:
+                # Best case: good fuel, tires can make it
                 stay_out_pits = []
-            elif remaining_laps > 50:
-                # Need one more pit, schedule it strategically
-                # Pit when tires would be ~80 laps old
-                laps_until_old_tires = max_tire_life - tire_age
-                next_pit_lap = current_lap + laps_until_old_tires
-                stay_out_pits = [next_pit_lap]
+            elif not need_fuel and tires_will_be_old and not short_race:
+                # Good fuel but tires will wear - schedule strategic pit
+                # Pit when tires would be ~90 laps old for optimal performance
+                laps_until_pit = max(30, max_tire_life - tire_age - 30)  # Keep some margin
+                next_pit_lap = current_lap + laps_until_pit
+                # Make sure pit is not after race ends
+                if next_pit_lap < num_laps:
+                    stay_out_pits = [next_pit_lap]
+                else:
+                    stay_out_pits = []
+            elif short_race:
+                # Short remaining distance - stay out regardless
+                stay_out_pits = []
             else:
-                # Short remaining distance, might as well stay out
-                stay_out_pits = []
+                # Default: need fuel, so plan a pit
+                next_pit_lap = current_lap + min(30, remaining_laps // 2)
+                if next_pit_lap < num_laps:
+                    stay_out_pits = [next_pit_lap]
+                else:
+                    stay_out_pits = []
 
             stay_out_strategy = Strategy(
                 name="Stay Out",
