@@ -84,15 +84,25 @@ class CarState:
 
     def get_fuel_penalty(self) -> float:
         """
-        Calculate lap time penalty from fuel weight.
+        Calculate lap time effect from fuel level.
 
-        Heavier car (more fuel) = slower lap times.
-        Linear relationship with fuel level.
+        Heavier car (more fuel) = slower lap times (positive penalty).
+        Low fuel adds a severe degradation penalty to simulate
+        engine derichment and reduced performance.
 
         Returns:
-            Lap time penalty in seconds
+            Lap time penalty in seconds (positive = slower)
         """
-        return self.physics.fuel_weight_penalty * self.fuel_level
+        if self.fuel_level <= 0:
+            # Out of fuel: massive penalty simulating engine stall / limping
+            return 5.0
+        elif self.fuel_level < 5:
+            # Critical fuel level: engine derichment, reduced power
+            fuel_weight_effect = self.physics.fuel_weight_penalty * self.fuel_level
+            critical_penalty = 2.0 * (1.0 - self.fuel_level / 5.0)  # 0 to 2s extra
+            return fuel_weight_effect + critical_penalty
+        else:
+            return self.physics.fuel_weight_penalty * self.fuel_level
 
     def get_noise(self) -> float:
         """
@@ -428,7 +438,7 @@ class RaceSimulator:
 
             # Consume fuel and age tires (if not pitting or pit didn't change tires)
             if lap not in car_pits or not car_pits[lap].tires_changed:
-                car.fuel_level -= self.config.fuel_consumption_per_lap
+                car.fuel_level = max(0.0, car.fuel_level - self.config.fuel_consumption_per_lap)
                 car.tire_age += 1
 
         # Second pass: apply traffic effects and finalize lap times
@@ -619,6 +629,25 @@ class RaceSimulator:
                 self.caution_remaining -= 1
                 if self.caution_remaining <= 0:
                     self.caution_active = False
+                    # Bunch the field: under caution, cars close up behind the pace car.
+                    # Compress gaps while maintaining order.
+                    # Lead lap cars (1+ laps down) get larger gaps.
+                    sorted_cars = sorted(self.cars, key=lambda c: c.cumulative_time)
+                    leader_time = sorted_cars[0].cumulative_time
+                    # Calculate how many laps each car is behind the leader
+                    leader_laps_completed = self.lap_history[-1]['lap'] if self.lap_history else lap
+                    for i, car in enumerate(sorted_cars):
+                        if i == 0:
+                            car.cumulative_time = leader_time
+                        else:
+                            prev_car = sorted_cars[i - 1]
+                            # Check if this car is a lap or more down
+                            gap_to_leader = car.cumulative_time - leader_time
+                            laps_down = int(gap_to_leader / (car.physics.base_lap_time or 30.0))
+                            # On-lead-lap cars: tight 0.3s gap (realistic pack)
+                            # Lapped cars: proportionally larger gap based on how many laps down
+                            base_gap = 0.3 + (laps_down * 0.5)  # ~0.3s per lap down
+                            car.cumulative_time = prev_car.cumulative_time + base_gap
             else:
                 self.green_flag_run_length += 1
 

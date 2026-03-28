@@ -125,10 +125,10 @@ with tab1:
 
         # Add custom strategy
         with st.expander("➕ Add Custom Strategy"):
-            custom_name = st.text_input("Strategy Name", "Custom")
-            pit_laps = st.text_input("Pit Laps (comma-separated)", "50, 100, 150")
+            custom_name = st.text_input("Strategy Name", "Custom", key="custom_strat_name")
+            pit_laps = st.text_input("Pit Laps (comma-separated)", "50, 100, 150", key="custom_pit_laps")
 
-            if st.button("Add Custom Strategy"):
+            if st.button("Add Custom Strategy", key="add_custom_btn"):
                 try:
                     laps = [int(l.strip()) for l in pit_laps.split(',')]
                     custom_strategy = Strategy(
@@ -136,9 +136,20 @@ with tab1:
                         description="Custom strategy",
                         pit_stops=[PitStop(lap=lap) for lap in laps]
                     )
+                    # Persist in session state
+                    if 'custom_strategies' not in st.session_state:
+                        st.session_state['custom_strategies'] = {}
+                    st.session_state['custom_strategies'][custom_name] = custom_strategy
                     st.success(f"Added strategy: {custom_name}")
-                except:
+                except (ValueError, TypeError):
                     st.error("Invalid pit laps format. Use: 'lap1, lap2, lap3'")
+
+        # Show any custom strategies that have been added
+        if st.session_state.get('custom_strategies'):
+            st.write("**Added Custom Strategies:**")
+            for cname, cstrat in st.session_state['custom_strategies'].items():
+                pit_lap_list = [p.lap for p in cstrat.pit_stops]
+                st.write(f"- {cname}: pits at laps {pit_lap_list}")
 
     with col2:
         st.subheader("Comparison Settings")
@@ -149,6 +160,10 @@ with tab1:
 
         # Build strategies dict
         strategies = {name: PRESET_STRATEGIES[name] for name in selected_presets}
+
+        # Include any custom strategies from session state
+        if st.session_state.get('custom_strategies'):
+            strategies.update(st.session_state['custom_strategies'])
 
         # Run comparison
         with st.spinner("Running Monte Carlo simulations..."):

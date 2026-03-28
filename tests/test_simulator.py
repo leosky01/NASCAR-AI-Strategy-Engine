@@ -77,12 +77,13 @@ class TestCarState:
         assert abs(penalty - 3.0) < 0.01
 
     def test_fuel_penalty_empty_tank(self):
-        """Test fuel penalty with empty tank"""
+        """Test fuel penalty with empty tank - should reflect engine stall/derichment"""
         physics = CarPhysics(fuel_weight_penalty=0.03)
         car = CarState(car_id=0, physics=physics, fuel_level=0.0)
 
         penalty = car.get_fuel_penalty()
-        assert penalty == 0.0
+        # Out of fuel incurs massive penalty (engine stall simulation)
+        assert penalty == 5.0
 
     def test_fuel_penalty_linear(self):
         """Test that fuel penalty is linear"""
@@ -162,19 +163,19 @@ class TestRaceSimulator:
             tire_degradation_rate=0.0,
             fuel_weight_penalty=0.0
         )
-        car = CarState(car_id=0, physics=physics, tire_age=0, fuel_level=0)
+        car = CarState(car_id=0, physics=physics, tire_age=0, fuel_level=50.0)
 
         sim = RaceSimulator()
         lap_time = sim.calculate_lap_time(car)
 
-        # Should be close to base (only small noise)
+        # Should be close to base (only small noise, no tire/fuel penalty)
         assert 47.5 < lap_time < 48.5
 
     def test_calculate_lap_time_old_tires(self):
         """Test that old tires slow down car"""
         physics = CarPhysics(base_lap_time=48.0, tire_degradation_rate=0.1)
-        car_new = CarState(car_id=0, physics=physics, tire_age=0, fuel_level=0)
-        car_old = CarState(car_id=1, physics=physics, tire_age=50, fuel_level=0)
+        car_new = CarState(car_id=0, physics=physics, tire_age=0, fuel_level=50.0)
+        car_old = CarState(car_id=1, physics=physics, tire_age=50, fuel_level=50.0)
 
         sim = RaceSimulator()
         time_new = sim.calculate_lap_time(car_new)

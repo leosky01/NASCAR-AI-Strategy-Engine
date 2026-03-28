@@ -30,7 +30,7 @@ class SimulatorConfig:
 
     # Fuel effects
     fuel_weight_penalty: float = 0.03  # seconds per percentage point
-    fuel_consumption_per_lap: float = 0.25  # percentage
+    fuel_consumption_per_lap: float = 0.80  # percentage (~125 laps on full tank, realistic for 1.5-mile tracks)
 
     # Traffic effects
     traffic_penalty_factor: float = 0.8  # max seconds
